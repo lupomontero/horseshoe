@@ -8,9 +8,9 @@ sending email using [handlebars](http://handlebarsjs.com/) templates.
 send out system emails using SMTP and Amazon SES. This emails are predesigned
 using `handlebars` templates and then sent using `nodemailer`.
 
-**THIS MODULE IS STILL WORK IN PROGRESS**
-
 `horseshoe` will retry to send individual emails if they fail (up to 3 times).
+
+**THIS MODULE IS STILL WORK IN PROGRESS**
 
 ## Installation
 
@@ -18,7 +18,7 @@ using `handlebars` templates and then sent using `nodemailer`.
 
 ## Usage
 
-Let's assume that you script is `myscript.js` and you have a directory called
+Let's assume that your script is `myscript.js` and you have a directory called
 `mail_templates` in the same location containing a template called
 `users-signup.txt` (relative to script: `mail_templates/users-signup.txt`).
 
