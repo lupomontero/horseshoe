@@ -1,0 +1,7 @@
+This is a test subject
+
+Hey {{user.firstname}},
+
+I hope you like my test email...
+
+Bye!
