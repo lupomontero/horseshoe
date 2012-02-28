@@ -8,6 +8,18 @@ sending email using [handlebars](http://handlebarsjs.com/) templates.
 send out system emails using SMTP and Amazon SES. This emails are predesigned
 using `handlebars` templates and then sent using `nodemailer`.
 
+`horseshoe` renders templates using the data specified in the `message`
+object:
+
+    var message = {
+      to: 'someone@somewhere.com',
+      template: 'users-signup',
+      data: { user: { firstname: 'Lupo' } }
+    };
+
+`horseshoe` will search the templates path for files with either a `.txt` or
+`.html` extension and render them using `handlebars` to create the email body.
+
 `horseshoe` will retry to send individual emails if they fail (up to 3 times).
 
 **THIS MODULE IS STILL WORK IN PROGRESS**
@@ -28,7 +40,7 @@ In `myscript.js`:
       Horseshoe = require('horseshoe').Horseshoe,
       horseshoe = new Horseshoe({ transport: 'sendmail' }),
       msg = {
-        to: 'lupo@e-noise.com',
+        to: 'someone@somewhere.com',
         template: 'users-signup',
         data: { user: { firstname: 'Lupo' } }
       };
