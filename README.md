@@ -10,4 +10,18 @@ sending email using [handlebars](http://handlebarsjs.com/) templates.
 
 ## Usage
 
-    var horseshoe = require('horseshoe');
+    var
+      Horseshoe = require('horseshoe').Horseshoe,
+      horseshoe = new Horseshoe({ transport: 'smtp' }),
+      msg = {
+        to: 'lupo@e-noise.com',
+        template: 'users-signup',
+        data: { user: { firstname: 'Lupo' } }
+      };
+
+    horseshoe.setTemplatesPath(__dirname + '/mail_templates/');
+    horseshoe.send(msg, function (er, data) {
+      //...
+    });
+
+## Running the tests
