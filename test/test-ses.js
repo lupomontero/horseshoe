@@ -10,7 +10,7 @@ var
   // included in the repo so you should create your own.
   config = JSON.parse(fs.readFileSync(__dirname + '/../config.json', 'utf8'));
 
-// male sure the transport is set to ses
+// make sure the transport is set to ses
 config.transport = 'ses';
 horseshoe = new Horseshoe(config)
 horseshoe.setTemplatesPath(__dirname + '/mail_templates/');
