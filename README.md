@@ -30,6 +30,8 @@ sending email using [handlebars](http://handlebarsjs.com/) templates.
 
     var Horseshoe = require('horseshoe').Horseshoe;
     var horseshoe = new Horseshoe({ transport: 'sendmail' });
+
+    // now you can use the horseshoe instance to send email
     // horseshoe.send(msg, function (er, result) {});
     // ...
 
