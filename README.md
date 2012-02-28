@@ -55,4 +55,3 @@ sending email using [handlebars](http://handlebarsjs.com/) templates.
       secret: "YOUR-AMAZON-SES-SECRET"
     });
 
-## Running the tests
