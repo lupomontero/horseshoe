@@ -21,6 +21,9 @@ object:
 `.html` extension (`users-signup.txt` and `users-signup.html` in this case) and
 render them using `handlebars` to create the email body.
 
+The `horseshoe.send()` method can send both individual messages or an array of
+messages.
+
 `horseshoe` will retry to send individual emails if they fail (up to 3 times).
 
 **THIS MODULE IS STILL WORK IN PROGRESS**
@@ -40,14 +43,14 @@ In `myscript.js`:
     var
       Horseshoe = require('horseshoe').Horseshoe,
       horseshoe = new Horseshoe({ transport: 'sendmail' }),
-      msg = {
+      message = {
         to: 'someone@somewhere.com',
         template: 'users-signup',
         data: { user: { firstname: 'Lupo' } }
       };
 
     horseshoe.setTemplatesPath(__dirname + '/mail_templates/');
-    horseshoe.send(msg, function (errors, success) {
+    horseshoe.send(message, function (errors, success) {
       if (errors && errors.length) {
         // handle errors
         // errors is an array with errors for each mail sent (one per recipient)
@@ -55,6 +58,9 @@ In `myscript.js`:
       }
 
     });
+
+Note that `horseshoe.send()` takes a single message in this example, but we can
+also pass an array of messages.
 
 The `mail_templates/users-signup.txt` template:
 
@@ -65,6 +71,47 @@ The `mail_templates/users-signup.txt` template:
     I hope you like my test email...
 
     Bye!
+
+## Events
+
+`horseshoe` is an `EventEmitter` and the following events are implemented:
+
+* `data`: This event is emitted for every individual email sent. Listeners will
+  be passed `error` and `success` arguments.
+* `end`: This event is emitted when all messages have been sent calling
+  `horseshoe.send()`. No arguments are passed to when this event is emitted.
+
+Example:
+
+    var
+      Horseshoe = require('horseshoe').Horseshoe,
+      horseshoe = new Horseshoe({ transport: 'sendmail' }),
+      messages = [
+        {
+          to: 'someone@somewhere.com',
+          template: 'users-signup',
+          data: { user: { firstname: 'Lupo' } }
+        },
+        {
+          to: 'someone.else@somewhere.com',
+          template: 'users-signup',
+          data: { user: { firstname: 'Someone' } }
+        }
+      ];
+
+    horseshoe.on('data', function (error, success) {
+      if (error) {
+        // something went wrong
+      } else {
+        // email was sent...
+      }
+    });
+
+    horseshoe.on('end', function () {
+      // all messages have been proceesed
+    });
+
+    horseshoe.send(messages);
 
 ## Supported transports
 
