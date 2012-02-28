@@ -20,8 +20,13 @@ sending email using [handlebars](http://handlebarsjs.com/) templates.
       };
 
     horseshoe.setTemplatesPath(__dirname + '/mail_templates/');
-    horseshoe.send(msg, function (er, data) {
-      //...
+    horseshoe.send(msg, function (errors, success) {
+      if (errors && errors.length) {
+        // handle errors
+        // errors is an array with errors for each mail sent (one per recipient)
+        console.log(errors);
+      }
+
     });
 
 ## Supported transports
@@ -32,7 +37,7 @@ sending email using [handlebars](http://handlebarsjs.com/) templates.
     var horseshoe = new Horseshoe({ transport: 'sendmail' });
 
     // now you can use the horseshoe instance to send email
-    // horseshoe.send(msg, function (er, result) {});
+    // horseshoe.send(msg, function (errors, success) {});
     // ...
 
 ### SMTP
