@@ -56,7 +56,6 @@ In `myscript.js`:
         // errors is an array with errors for each mail sent (one per recipient)
         console.log(errors);
       }
-
     });
 
 Note that `horseshoe.send()` takes a single message in this example, but we can
@@ -78,8 +77,8 @@ The `mail_templates/users-signup.txt` template:
 
 * `data`: This event is emitted for every individual email sent. Listeners will
   be passed `error` and `success` arguments.
-* `end`: This event is emitted when all messages have been sent calling
-  `horseshoe.send()`. No arguments are passed to when this event is emitted.
+* `end`: This event is emitted when all messages have been sent. No arguments
+  are passed to when this event is emitted.
 
 Example:
 
