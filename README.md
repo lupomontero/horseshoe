@@ -28,7 +28,8 @@ sending email using [handlebars](http://handlebarsjs.com/) templates.
 
 ### sendmail
 
-    var horseshoe = new (require('horseshoe').Horseshoe)({ transport: 'sendmail' });
+    var Horseshoe = require('horseshoe').Horseshoe;
+    var horseshoe = new Horseshoe({ transport: 'sendmail' });
 
 ### SMTP
 
