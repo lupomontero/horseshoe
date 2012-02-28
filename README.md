@@ -4,17 +4,19 @@
 wrapper around [nodemailer](https://github.com/andris9/nodemailer) used for
 sending email using [handlebars](http://handlebarsjs.com/) templates.
 
+`horseshoe` is designed for a very specific use case. We use it at E-NOISE to
+send out system emails using SMTP and Amazon SES. This emails are predesigned
+using `handlebars` templates and then sent using `nodemailer`.
+
+**THIS MODULE IS STILL WORK IN PROGRESS**
+
+`horseshoe` will retry to send individual emails if they fail (up to 3 times).
+
 ## Installation
 
     npm install horseshoe
 
 ## Usage
-
-`horseshoe` is designed for a very specific use case. We use it at E-NOISE to
-send out system emails using SMTP and Amazon SES. This emails are predesigned
-using `handlebars` templates and then sent using `nodemailer`.
-
-`horseshoe` will retry to send individual emails if they fail (up to 3 times).
 
 Let's assume that you script is `myscript.js` and you have a directory called
 `mail_templates` in the same location containing a template called
