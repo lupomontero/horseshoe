@@ -18,7 +18,8 @@ object:
     };
 
 `horseshoe` will search the templates path for files with either a `.txt` or
-`.html` extension and render them using `handlebars` to create the email body.
+`.html` extension (`users-signup.txt` and `users-signup.html` in this case) and
+render them using `handlebars` to create the email body.
 
 `horseshoe` will retry to send individual emails if they fail (up to 3 times).
 
