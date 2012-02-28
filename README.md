@@ -6,7 +6,7 @@ sending email using [handlebars](http://handlebarsjs.com/) templates.
 
 `horseshoe` is designed for a very specific use case. We use it at E-NOISE to
 send out system emails using SMTP and Amazon SES. This emails are predesigned
-using `handlebars` templates and then sent using `nodemailer`.
+using `handlebars` templates and then rendered and sent this module.
 
 `horseshoe` renders templates using the data specified in the `message`
 object:
