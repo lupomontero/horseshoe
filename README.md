@@ -12,7 +12,7 @@ sending email using [handlebars](http://handlebarsjs.com/) templates.
 
     var
       Horseshoe = require('horseshoe').Horseshoe,
-      horseshoe = new Horseshoe({ transport: 'smtp' }),
+      horseshoe = new Horseshoe({ transport: 'sendmail' }),
       msg = {
         to: 'lupo@e-noise.com',
         template: 'users-signup',
@@ -22,6 +22,35 @@ sending email using [handlebars](http://handlebarsjs.com/) templates.
     horseshoe.setTemplatesPath(__dirname + '/mail_templates/');
     horseshoe.send(msg, function (er, data) {
       //...
+    });
+
+## Supported transports
+
+### sendmail
+
+    var Horseshoe = require('horseshoe').Horseshoe;
+    var horseshoe = new Horseshoe({ transport: 'sendmail' });
+
+### SMTP
+
+    var Horseshoe = require('horseshoe').Horseshoe;
+    var horseshoe = new Horseshoe({
+      transport: 'smtp',
+      sender: 'Someone <someone@somewhere.com>',
+      host: 'mail.somewhere.com',
+      port: 587,
+      use_authentication: true,
+      user: 'someone@somewhere.com',
+      pass: 'somepassowrd'
+    });
+
+### Amazon SES
+
+    var Horseshoe = require('horseshoe').Horseshoe;
+    var horseshoe = new Horseshoe({
+      transport: 'ses',
+      key: "YOUR-AMAZON-SES-KEY",
+      secret: "YOUR-AMAZON-SES-SECRET"
     });
 
 ## Running the tests
