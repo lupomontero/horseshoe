@@ -28,13 +28,11 @@ sending email using [handlebars](http://handlebarsjs.com/) templates.
 
 ### sendmail
 
-    var Horseshoe = require('horseshoe').Horseshoe;
-    var horseshoe = new Horseshoe({ transport: 'sendmail' });
+    var horseshoe = new (require('horseshoe').Horseshoe)({ transport: 'sendmail' });
 
 ### SMTP
 
-    var Horseshoe = require('horseshoe').Horseshoe;
-    var horseshoe = new Horseshoe({
+    var horseshoe = new (require('horseshoe').Horseshoe)({
       transport: 'smtp',
       sender: 'Someone <someone@somewhere.com>',
       host: 'mail.somewhere.com',
@@ -46,8 +44,7 @@ sending email using [handlebars](http://handlebarsjs.com/) templates.
 
 ### Amazon SES
 
-    var Horseshoe = require('horseshoe').Horseshoe;
-    var horseshoe = new Horseshoe({
+    var horseshoe = new (require('horseshoe').Horseshoe)({
       transport: 'ses',
       key: "YOUR-AMAZON-SES-KEY",
       secret: "YOUR-AMAZON-SES-SECRET"
