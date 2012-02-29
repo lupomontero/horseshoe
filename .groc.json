@@ -1,7 +1,0 @@
-{
-  "glob": [ "lib/*.js" ],
-  "out": "./docs",
-  "index": "index.html",
-  "root": ".",
-  "github": true
-}
