@@ -27,5 +27,6 @@
     "docco": "0.3.0"
   },
   "directories": { "test": "./test" },
+  "scripts": { "test": "make runtests" },
   "engines": { "node": ">= 0.6.1" }
 }
