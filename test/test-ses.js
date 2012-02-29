@@ -1,18 +1,20 @@
-var
-  fs = require('fs'),
-  vows = require('vows'),
-  assert = require('assert'),
-  Horseshoe = require(__dirname + '/../lib/horseshoe').Horseshoe,
-  suite = vows.describe('Horseshoe SES'),
-  horseshoe,
-  // This assumes you have a file with horseshoe options in json format called
-  // config.json in the directory above this script. This config file IS NOT
-  // included in the repo so you should create your own.
-  config = JSON.parse(fs.readFileSync(__dirname + '/../config.json', 'utf8'));
+require(__dirname + '/common');
 
-// make sure the transport is set to ses
-config.transport = 'ses';
-horseshoe = new Horseshoe(config)
+var suite = vows.describe('Horseshoe SES');
+
+if (process.argv.indexOf('--live') === -1) {
+  config = {
+    sender: 'someone',
+    transport: 'ses',
+    key: 'YOUR-AMAZON-SES-KEY',
+    secret: 'YOUR-AMAZON-SES-SECRET',
+    nodemailer: global.nodemailer
+  };
+} else {
+  config.transport = 'ses';
+}
+
+var horseshoe = new Horseshoe(config)
 horseshoe.setTemplatesPath(__dirname + '/mail_templates/');
 
 suite.addBatch({

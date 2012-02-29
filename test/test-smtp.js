@@ -1,21 +1,13 @@
-var
-  util = require('util'),
-  fs = require('fs'),
-  vows = require('vows'),
-  assert = require('assert'),
-  Horseshoe = require(__dirname + '/../lib/horseshoe').Horseshoe,
-  suite = vows.describe('Horseshoe SMTP'),
-  // This assumes you have a file with horseshoe options in json format called
-  // config.json in the directory above this script. This config file IS NOT
-  // included in the repo so you should create your own.
-  config = JSON.parse(fs.readFileSync(__dirname + '/../config.json', 'utf8'));
+require(__dirname + '/common');
+
+var suite = vows.describe('Horseshoe SMTP');
 
 suite.addBatch({
 
   'send smtp error no sender': {
     topic: function () {
       var
-        horseshoe = new Horseshoe({ transport: 'smtp' }),
+        horseshoe = new Horseshoe({ transport: 'smtp', nodemailer: nodemailer }),
         msg = {
           to: 'lupo@e-noise.com',
           template: 'users-signup',
@@ -39,7 +31,7 @@ suite.addBatch({
   'send smtp error no sender (test data event)': {
     topic: function () {
       var
-        horseshoe = new Horseshoe({ transport: 'smtp' }),
+        horseshoe = new Horseshoe({ transport: 'smtp', nodemailer: nodemailer }),
         msg = {
           to: 'lupo@e-noise.com',
           template: 'users-signup',
@@ -60,7 +52,11 @@ suite.addBatch({
   'send smtp error connection refused': {
     topic: function () {
       var
-        horseshoe = new Horseshoe({ transport: 'smtp', sender: 'lupo@e-noise.com' }),
+        horseshoe = new Horseshoe({
+          transport: 'smtp',
+          sender: 'lupo@e-noise.com',
+          nodemailer: nodemailer
+        }),
         msg = {
           to: 'lupo@e-noise.com',
           template: 'users-signup',

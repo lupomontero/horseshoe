@@ -13,7 +13,7 @@ jslint:
 
 runtests:
 	@echo "Running tests..."
-	@find ./test -name "*.js" -print0 | xargs -0 ${VOWS} --spec
+	@find ./test -name "test-*.js" -print0 | xargs -0 ${VOWS} --spec
 
 docs: clean
 	@echo "Running docco..."
