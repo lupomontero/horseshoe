@@ -1,0 +1,156 @@
+<!DOCTYPE html><html lang="en"><head><title>index</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="index"><meta name="groc-project-path" content="README.md"><meta name="groc-github-url" content="https://github.com/E-NOISE/horseshoe"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/E-NOISE/horseshoe/blob/master/README.md">README.md</a></div></div><div id="document"><div class="segment"><div class="comments"><div class="wrapper"><h1 id="horseshoe">horseshoe</h1>
+
+<p><a href="http://travis-ci.org/E-NOISE/horseshoe"><img src="https://secure.travis-ci.org/E-NOISE/horseshoe.png" alt="Build Status" title="" /></a></p>
+
+<p><code>horseshoe</code> is a mailer module for <a href="http://nodejs.org/">node.js</a>. It provides a
+wrapper around <a href="https://github.com/andris9/nodemailer">nodemailer</a> used for
+sending email using <a href="http://handlebarsjs.com/">handlebars</a> templates.</p>
+
+<p><code>horseshoe</code> is designed for a very specific use case. We use it at E-NOISE to
+send out system emails using SMTP and Amazon SES. This emails are predesigned
+using <code>handlebars</code> templates and then rendered and sent this module.</p>
+
+<p><code>horseshoe</code> renders templates using the data specified in the <code>message</code>
+object:</p>
+
+<pre><code>var message = {
+  to: 'someone@somewhere.com',
+  template: 'users-signup',
+  data: { user: { firstname: 'Lupo' } }
+};
+</code></pre>
+
+<p><code>horseshoe</code> will search the templates path for files with either a <code>.txt</code> or
+<code>.html</code> extension (<code>users-signup.txt</code> and <code>users-signup.html</code> in this case) and
+render them using <code>handlebars</code> to create the email body.</p>
+
+<p>The <code>horseshoe.send()</code> method can send both individual messages or an array of
+messages.</p>
+
+<p><code>horseshoe</code> will retry to send individual emails if they fail (up to 3 times).</p>
+
+<p><strong>THIS MODULE IS STILL WORK IN PROGRESS</strong></p>
+
+<h2 id="installation">Installation</h2>
+
+<pre><code>npm install horseshoe
+</code></pre>
+
+<h2 id="usage">Usage</h2>
+
+<p>Let's assume that your script is <code>myscript.js</code> and you have a directory called
+<code>mail_templates</code> in the same location containing a template called
+<code>users-signup.txt</code> (relative to script: <code>mail_templates/users-signup.txt</code>).</p>
+
+<p>In <code>myscript.js</code>:</p>
+
+<pre><code>var
+  Horseshoe = require('horseshoe').Horseshoe,
+  horseshoe = new Horseshoe({ transport: 'sendmail' }),
+  message = {
+    to: 'someone@somewhere.com',
+    template: 'users-signup',
+    data: { user: { firstname: 'Lupo' } }
+  };
+
+horseshoe.setTemplatesPath(__dirname + '/mail_templates/');
+horseshoe.send(message, function (errors, success) {
+  if (errors &amp;&amp; errors.length) {
+    // handle errors
+    // errors is an array with errors for each mail sent (one per recipient)
+    console.log(errors);
+  }
+});
+</code></pre>
+
+<p>Note that <code>horseshoe.send()</code> takes a single message in this example, but we can
+also pass an array of messages.</p>
+
+<p>The <code>mail_templates/users-signup.txt</code> template:</p>
+
+<pre><code>This is a test subject
+
+Hey {{user.firstname}},
+
+I hope you like my test email...
+
+Bye!
+</code></pre>
+
+<h2 id="events">Events</h2>
+
+<p><code>horseshoe</code> is an <code>EventEmitter</code> and the following events are implemented:</p>
+
+<ul>
+<li><code>data</code>: This event is emitted for every individual email sent. Listeners will
+be passed <code>error</code> and <code>success</code> arguments.</li>
+<li><code>end</code>: This event is emitted when all messages have been sent. No arguments
+are passed to when this event is emitted.</li>
+</ul>
+
+<p>Example:</p>
+
+<pre><code>var
+  Horseshoe = require('horseshoe').Horseshoe,
+  horseshoe = new Horseshoe({ transport: 'sendmail' }),
+  messages = [
+    {
+      to: 'someone@somewhere.com',
+      template: 'users-signup',
+      data: { user: { firstname: 'Lupo' } }
+    },
+    {
+      to: 'someone.else@somewhere.com',
+      template: 'users-signup',
+      data: { user: { firstname: 'Someone' } }
+    }
+  ];
+
+horseshoe.on('data', function (error, success) {
+  if (error) {
+    // something went wrong
+  } else {
+    // email was sent...
+  }
+});
+
+horseshoe.on('end', function () {
+  // all messages have been proceesed
+});
+
+horseshoe.send(messages);
+</code></pre>
+
+<h2 id="supported-transports">Supported transports</h2>
+
+<h3 id="sendmail">sendmail</h3>
+
+<pre><code>var Horseshoe = require('horseshoe').Horseshoe;
+var horseshoe = new Horseshoe({ transport: 'sendmail' });
+
+// now you can use the horseshoe instance to send email
+// horseshoe.send(msg, function (errors, success) {});
+// ...
+</code></pre>
+
+<h3 id="smtp">SMTP</h3>
+
+<pre><code>var horseshoe = new (require('horseshoe').Horseshoe)({
+  transport: 'smtp',
+  sender: 'Someone &lt;someone@somewhere.com&gt;',
+  host: 'mail.somewhere.com',
+  port: 587,
+  use_authentication: true,
+  user: 'someone@somewhere.com',
+  pass: 'somepassowrd'
+});
+</code></pre>
+
+<h3 id="amazon-ses">Amazon SES</h3>
+
+<pre><code>var horseshoe = new (require('horseshoe').Horseshoe)({
+  transport: 'ses',
+  key: "YOUR-AMAZON-SES-KEY",
+  secret: "YOUR-AMAZON-SES-SECRET"
+});
+</code></pre></div></div></div></div></body></html>
