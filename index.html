@@ -1,156 +1,200 @@
-<!DOCTYPE html><html lang="en"><head><title>index</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="index"><meta name="groc-project-path" content="README.md"><meta name="groc-github-url" content="https://github.com/E-NOISE/horseshoe"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/E-NOISE/horseshoe/blob/master/README.md">README.md</a></div></div><div id="document"><div class="segment"><div class="comments"><div class="wrapper"><h1 id="horseshoe">horseshoe</h1>
+<!DOCTYPE html><html lang="en"><head><title>index</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="index"><meta name="groc-project-path" content="lib/horseshoe.js"><meta name="groc-github-url" content="https://github.com/E-NOISE/horseshoe"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/E-NOISE/horseshoe/blob/master/lib/horseshoe.js">lib/horseshoe.js</a></div></div><div id="document"><div class="segment"><div class="comments"><div class="wrapper"><h2 id="dependencies">Dependencies</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="kd">var</span>
+  <span class="nx">util</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;util&#39;</span><span class="p">),</span>
+  <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">),</span>
+  <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">),</span>
+  <span class="nx">events</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;events&#39;</span><span class="p">),</span>
+  <span class="nx">hbs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;hbs&#39;</span><span class="p">);</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><h2 id="horseshoeerror-message-email-">HorseshoeError( message, email )</h2>
 
-<p><a href="http://travis-ci.org/E-NOISE/horseshoe"><img src="https://secure.travis-ci.org/E-NOISE/horseshoe.png" alt="Build Status" title="" /></a></p>
+<p>Constructor.</p>
 
-<p><code>horseshoe</code> is a mailer module for <a href="http://nodejs.org/">node.js</a>. It provides a
-wrapper around <a href="https://github.com/andris9/nodemailer">nodemailer</a> used for
-sending email using <a href="http://handlebarsjs.com/">handlebars</a> templates.</p>
-
-<p><code>horseshoe</code> is designed for a very specific use case. We use it at E-NOISE to
-send out system emails using SMTP and Amazon SES. This emails are predesigned
-using <code>handlebars</code> templates and then rendered and sent this module.</p>
-
-<p><code>horseshoe</code> renders templates using the data specified in the <code>message</code>
-object:</p>
-
-<pre><code>var message = {
-  to: 'someone@somewhere.com',
-  template: 'users-signup',
-  data: { user: { firstname: 'Lupo' } }
-};
-</code></pre>
-
-<p><code>horseshoe</code> will search the templates path for files with either a <code>.txt</code> or
-<code>.html</code> extension (<code>users-signup.txt</code> and <code>users-signup.html</code> in this case) and
-render them using <code>handlebars</code> to create the email body.</p>
-
-<p>The <code>horseshoe.send()</code> method can send both individual messages or an array of
-messages.</p>
-
-<p><code>horseshoe</code> will retry to send individual emails if they fail (up to 3 times).</p>
-
-<p><strong>THIS MODULE IS STILL WORK IN PROGRESS</strong></p>
-
-<h2 id="installation">Installation</h2>
-
-<pre><code>npm install horseshoe
-</code></pre>
-
-<h2 id="usage">Usage</h2>
-
-<p>Let's assume that your script is <code>myscript.js</code> and you have a directory called
-<code>mail_templates</code> in the same location containing a template called
-<code>users-signup.txt</code> (relative to script: <code>mail_templates/users-signup.txt</code>).</p>
-
-<p>In <code>myscript.js</code>:</p>
-
-<pre><code>var
-  Horseshoe = require('horseshoe').Horseshoe,
-  horseshoe = new Horseshoe({ transport: 'sendmail' }),
-  message = {
-    to: 'someone@somewhere.com',
-    template: 'users-signup',
-    data: { user: { firstname: 'Lupo' } }
-  };
-
-horseshoe.setTemplatesPath(__dirname + '/mail_templates/');
-horseshoe.send(message, function (errors, success) {
-  if (errors &amp;&amp; errors.length) {
-    // handle errors
-    // errors is an array with errors for each mail sent (one per recipient)
-    console.log(errors);
-  }
-});
-</code></pre>
-
-<p>Note that <code>horseshoe.send()</code> takes a single message in this example, but we can
-also pass an array of messages.</p>
-
-<p>The <code>mail_templates/users-signup.txt</code> template:</p>
-
-<pre><code>This is a test subject
-
-Hey {{user.firstname}},
-
-I hope you like my test email...
-
-Bye!
-</code></pre>
-
-<h2 id="events">Events</h2>
-
-<p><code>horseshoe</code> is an <code>EventEmitter</code> and the following events are implemented:</p>
+<h4 id="arguments">Arguments</h4>
 
 <ul>
-<li><code>data</code>: This event is emitted for every individual email sent. Listeners will
-be passed <code>error</code> and <code>success</code> arguments.</li>
-<li><code>end</code>: This event is emitted when all messages have been sent. No arguments
-are passed to when this event is emitted.</li>
+<li><em>String</em> <strong>message</strong></li>
+<li><em>Object</em> <strong>email</strong> An email message object.</li>
 </ul>
 
-<p>Example:</p>
+<p>Returns: <code>HorseshoeError</code></p></div></div><div class="code"><div class="wrapper"><span class="kd">var</span> <span class="nx">HorseshoeError</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">HorseshoeError</span><span class="p">(</span><span class="nx">message</span><span class="p">,</span> <span class="nx">email</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">name</span> <span class="o">=</span> <span class="s1">&#39;HorseshoeError&#39;</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">email</span> <span class="o">=</span> <span class="nx">email</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">message</span> <span class="o">=</span> <span class="nx">message</span><span class="p">;</span>
+  <span class="nb">Error</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">message</span><span class="p">);</span>
+  <span class="nb">Error</span><span class="p">.</span><span class="nx">captureStackTrace</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">.</span><span class="nx">callee</span><span class="p">);</span>
+<span class="p">};</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Inherit from <code>Error</code></p></div></div><div class="code"><div class="wrapper"><span class="nx">util</span><span class="p">.</span><span class="nx">inherits</span><span class="p">(</span><span class="nx">HorseshoeError</span><span class="p">,</span> <span class="nb">Error</span><span class="p">);</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><h2 id="horseshoe-options-">Horseshoe( options )</h2>
 
-<pre><code>var
-  Horseshoe = require('horseshoe').Horseshoe,
-  horseshoe = new Horseshoe({ transport: 'sendmail' }),
-  messages = [
-    {
-      to: 'someone@somewhere.com',
-      template: 'users-signup',
-      data: { user: { firstname: 'Lupo' } }
-    },
-    {
-      to: 'someone.else@somewhere.com',
-      template: 'users-signup',
-      data: { user: { firstname: 'Someone' } }
-    }
-  ];
+<p>Constructor.</p>
 
-horseshoe.on('data', function (error, success) {
-  if (error) {
-    // something went wrong
-  } else {
-    // email was sent...
-  }
-});
+<h4 id="arguments">Arguments</h4>
 
-horseshoe.on('end', function () {
-  // all messages have been proceesed
-});
+<ul>
+<li><em>Object</em> <strong>options</strong></li>
+</ul>
 
-horseshoe.send(messages);
-</code></pre>
+<p>Returns: <code>Horseshoe</code></p></div></div><div class="code"><div class="wrapper"><span class="kd">var</span> <span class="nx">Horseshoe</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{};</span>
+  <span class="nx">options</span><span class="p">.</span><span class="nx">transport</span> <span class="o">=</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">transport</span> <span class="o">||</span> <span class="s1">&#39;sendmail&#39;</span><span class="p">).</span><span class="nx">toLowerCase</span><span class="p">();</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">nodemailer</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">nodemailer</span> <span class="o">||</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;nodemailer&#39;</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">sender</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">sender</span> <span class="o">||</span> <span class="nx">options</span><span class="p">.</span><span class="nx">user</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">tmplPath</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">tmplPath</span> <span class="o">||</span> <span class="nx">__dirname</span><span class="p">;</span>
 
-<h2 id="supported-transports">Supported transports</h2>
+  <span class="k">switch</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">transport</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">case</span> <span class="s1">&#39;smtp&#39;</span><span class="o">:</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">transport</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">nodemailer</span><span class="p">.</span><span class="nx">createTransport</span><span class="p">(</span><span class="s2">&quot;SMTP&quot;</span><span class="p">,</span> <span class="p">{</span>
+      <span class="nx">host</span><span class="o">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">host</span><span class="p">,</span>
+      <span class="nx">port</span><span class="o">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">port</span><span class="p">,</span>
+      <span class="nx">use_authentication</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+      <span class="cm">/* ssl: true, */</span>
+      <span class="nx">user</span><span class="o">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">user</span><span class="p">,</span>
+      <span class="nx">pass</span><span class="o">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">pass</span>
+    <span class="p">});</span>
+    <span class="k">break</span><span class="p">;</span>
+  <span class="k">case</span> <span class="s1">&#39;ses&#39;</span><span class="o">:</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">transport</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">nodemailer</span><span class="p">.</span><span class="nx">createTransport</span><span class="p">(</span><span class="s2">&quot;SES&quot;</span><span class="p">,</span> <span class="p">{</span>
+      <span class="nx">AWSAccessKeyID</span><span class="o">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">key</span><span class="p">,</span> <span class="c1">// required</span>
+      <span class="nx">AWSSecretKey</span><span class="o">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">secret</span> <span class="c1">// required</span>
+      <span class="cm">/* ServiceUrl: &#39;https://email.us-east-1.amazonaws.com&#39; */</span> <span class="c1">// optional</span>
+    <span class="p">});</span>
+    <span class="k">break</span><span class="p">;</span>
+  <span class="k">case</span> <span class="s1">&#39;sendmail&#39;</span><span class="o">:</span>
+    <span class="nx">options</span><span class="p">.</span><span class="nx">path</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">path</span> <span class="o">||</span> <span class="s2">&quot;/usr/bin/sendmail&quot;</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">transport</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">nodemailer</span><span class="p">.</span><span class="nx">createTransport</span><span class="p">(</span><span class="s2">&quot;Sendmail&quot;</span><span class="p">,</span> <span class="nx">options</span><span class="p">.</span><span class="nx">path</span><span class="p">);</span>
+    <span class="k">break</span><span class="p">;</span>
+  <span class="k">default</span><span class="o">:</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Horseshoe: Unknown transport &quot;&#39;</span> <span class="o">+</span> <span class="nx">options</span><span class="p">.</span><span class="nx">transport</span> <span class="o">+</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">};</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Inherit from <code>EventEmitter</code></p></div></div><div class="code"><div class="wrapper"><span class="nx">util</span><span class="p">.</span><span class="nx">inherits</span><span class="p">(</span><span class="nx">Horseshoe</span><span class="p">,</span> <span class="nx">events</span><span class="p">.</span><span class="nx">EventEmitter</span><span class="p">);</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><h2 id="methods">Methods</h2></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><h3 id="settemplatespath-">setTemplatesPath( )</h3>
 
-<h3 id="sendmail">sendmail</h3>
+<p>Set path to template files.</p>
 
-<pre><code>var Horseshoe = require('horseshoe').Horseshoe;
-var horseshoe = new Horseshoe({ transport: 'sendmail' });
+<h4 id="arguments">Arguments</h4>
 
-// now you can use the horseshoe instance to send email
-// horseshoe.send(msg, function (errors, success) {});
-// ...
-</code></pre>
+<ul>
+<li><em>String</em> <strong>str</strong> Path to template files.</li>
+</ul>
 
-<h3 id="smtp">SMTP</h3>
+<p>Returns: <code>void</code></p></div></div><div class="code"><div class="wrapper"><span class="nx">Horseshoe</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">setTemplatesPath</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">str</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">tmplPath</span> <span class="o">=</span> <span class="nx">str</span><span class="p">;</span>
+<span class="p">};</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><h3 id="render-msg-">render( msg )</h3>
 
-<pre><code>var horseshoe = new (require('horseshoe').Horseshoe)({
-  transport: 'smtp',
-  sender: 'Someone &lt;someone@somewhere.com&gt;',
-  host: 'mail.somewhere.com',
-  port: 587,
-  use_authentication: true,
-  user: 'someone@somewhere.com',
-  pass: 'somepassowrd'
-});
-</code></pre>
+<p>Render message using template.</p>
 
-<h3 id="amazon-ses">Amazon SES</h3>
+<h4 id="arguments">Arguments</h4>
 
-<pre><code>var horseshoe = new (require('horseshoe').Horseshoe)({
-  transport: 'ses',
-  key: "YOUR-AMAZON-SES-KEY",
-  secret: "YOUR-AMAZON-SES-SECRET"
-});
-</code></pre></div></div></div></div></body></html>
+<ul>
+<li><em>Object</em> <strong>msg</strong> A message object.</li>
+</ul>
+
+<p>Returns: <code>void</code></p></div></div><div class="code"><div class="wrapper"><span class="nx">Horseshoe</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">render</span> <span class="o">=</span> <span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="kd">var</span>
+    <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+    <span class="nx">cache</span> <span class="o">=</span> <span class="p">{},</span>
+    <span class="nx">compile</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">fname</span><span class="p">)</span> <span class="p">{</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>if already in cache we return cached value</p></div></div><div class="code"><div class="wrapper">      <span class="k">if</span> <span class="p">(</span><span class="nx">cache</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">fname</span><span class="p">))</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">cache</span><span class="p">[</span><span class="nx">fname</span><span class="p">];</span> <span class="p">}</span>
+
+      <span class="k">if</span> <span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">existsSync</span><span class="p">(</span><span class="nx">fname</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">cache</span><span class="p">[</span><span class="nx">fname</span><span class="p">]</span> <span class="o">=</span> <span class="nx">hbs</span><span class="p">.</span><span class="nx">compile</span><span class="p">(</span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span><span class="p">(</span><span class="nx">fname</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">));</span>
+        <span class="k">return</span> <span class="nx">cache</span><span class="p">[</span><span class="nx">fname</span><span class="p">];</span>
+      <span class="p">}</span>
+    <span class="p">};</span>
+
+  <span class="k">return</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">msg</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span>
+      <span class="nx">htmlPath</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">tmplPath</span> <span class="o">+</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">template</span> <span class="o">+</span> <span class="s1">&#39;.html&#39;</span><span class="p">,</span>
+      <span class="nx">textPath</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">tmplPath</span> <span class="o">+</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">template</span> <span class="o">+</span> <span class="s1">&#39;.txt&#39;</span><span class="p">,</span>
+      <span class="nx">body</span><span class="p">,</span> <span class="nx">textTmplRawArray</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">msg</span><span class="p">.</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">data</span> <span class="o">=</span> <span class="p">{};</span> <span class="p">}</span>
+
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">blockHelpers</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+
+    <span class="nx">cache</span><span class="p">[</span><span class="nx">htmlPath</span><span class="p">]</span> <span class="o">=</span> <span class="nx">compile</span><span class="p">(</span><span class="nx">htmlPath</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">cache</span><span class="p">[</span><span class="nx">htmlPath</span><span class="p">]</span> <span class="o">===</span> <span class="s1">&#39;function&#39;</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">msg</span><span class="p">.</span><span class="nx">html</span> <span class="o">=</span> <span class="nx">cache</span><span class="p">[</span><span class="nx">htmlPath</span><span class="p">](</span><span class="nx">msg</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="k">delete</span> <span class="nx">cache</span><span class="p">[</span><span class="nx">htmlPath</span><span class="p">];</span>
+    <span class="p">}</span>
+
+    <span class="nx">cache</span><span class="p">[</span><span class="nx">textPath</span><span class="p">]</span> <span class="o">=</span> <span class="nx">compile</span><span class="p">(</span><span class="nx">textPath</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">cache</span><span class="p">[</span><span class="nx">textPath</span><span class="p">]</span> <span class="o">===</span> <span class="s1">&#39;function&#39;</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">body</span> <span class="o">=</span> <span class="nx">cache</span><span class="p">[</span><span class="nx">textPath</span><span class="p">](</span><span class="nx">msg</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+      <span class="nx">textTmplRawArray</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;\n&#39;</span><span class="p">);</span>
+      <span class="nx">msg</span><span class="p">.</span><span class="nx">subject</span> <span class="o">=</span> <span class="nx">textTmplRawArray</span><span class="p">.</span><span class="nx">shift</span><span class="p">();</span>
+      <span class="nx">textTmplRawArray</span><span class="p">.</span><span class="nx">shift</span><span class="p">();</span> <span class="c1">// remove empty line after subject line</span>
+      <span class="nx">msg</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="nx">textTmplRawArray</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;\n&#39;</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="k">delete</span> <span class="nx">cache</span><span class="p">[</span><span class="nx">textPath</span><span class="p">];</span>
+    <span class="p">}</span>
+  <span class="p">};</span>
+<span class="p">}());</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><h3 id="send-msg-cb-">send( msg, cb )</h3>
+
+<p>Send message.</p>
+
+<h4 id="arguments">Arguments</h4>
+
+<ul>
+<li><em>Object</em> | <em>Array</em> <strong>msg</strong> A message object or an array of messages.</li>
+<li><em>Function</em> <strong>cb</strong> Callback function to be invoked when done.</li>
+</ul>
+
+<p>Returns: <code>void</code></p></div></div><div class="code"><div class="wrapper"><span class="nx">Horseshoe</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">send</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span>
+    <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+    <span class="nx">processed</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="nx">errors</span> <span class="o">=</span> <span class="p">[],</span>
+
+    <span class="nx">handleCallback</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">er</span><span class="p">,</span> <span class="nx">success</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">er</span><span class="p">)</span> <span class="p">{</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">er</span><span class="p">);</span> <span class="p">}</span>
+      <span class="nx">processed</span><span class="o">++</span><span class="p">;</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">processed</span> <span class="o">===</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">self</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;end&#39;</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">errors</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">cb</span><span class="p">(</span><span class="nx">errors</span><span class="p">);</span> <span class="p">}</span>
+        <span class="nx">cb</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+
+    <span class="nx">makeSend</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+      <span class="kd">var</span>
+        <span class="nx">retries</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="nx">handleSendCallback</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="nx">er</span><span class="p">,</span> <span class="nx">success</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">if</span> <span class="p">(</span><span class="nx">er</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">er</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">HorseshoeError</span><span class="p">(</span><span class="nx">er</span><span class="p">.</span><span class="nx">message</span><span class="p">,</span> <span class="nx">msg</span><span class="p">);</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>errors are emitted as data because otherwise the whole queue
+stops...</p></div></div><div class="code"><div class="wrapper">            <span class="nx">self</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="nx">er</span><span class="p">);</span>
+            <span class="nx">handleCallback</span><span class="p">(</span><span class="nx">er</span><span class="p">);</span>
+          <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">self</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="nx">success</span><span class="p">);</span>
+            <span class="nx">handleCallback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">success</span><span class="p">);</span>
+          <span class="p">}</span>
+        <span class="p">};</span>
+
+      <span class="k">return</span> <span class="kd">function</span> <span class="nx">send</span><span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">msg</span><span class="p">.</span><span class="nx">sender</span><span class="p">)</span> <span class="p">{</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">sender</span> <span class="o">=</span> <span class="nx">self</span><span class="p">.</span><span class="nx">sender</span><span class="p">;</span> <span class="p">}</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">msg</span><span class="p">.</span><span class="nx">template</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">try</span> <span class="p">{</span>
+            <span class="nx">self</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">msg</span><span class="p">);</span>
+          <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">er</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">handleSendCallback</span><span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="nx">er</span><span class="p">);</span>
+          <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="nx">self</span><span class="p">.</span><span class="nx">nodemailer</span><span class="p">.</span><span class="nx">sendMail</span><span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">er</span><span class="p">,</span> <span class="nx">success</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">if</span> <span class="p">(</span><span class="nx">er</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">retries</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">)</span> <span class="p">{</span>
+              <span class="nx">retries</span><span class="o">++</span><span class="p">;</span>
+              <span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span> <span class="nx">send</span><span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="nx">cb</span><span class="p">);</span> <span class="p">},</span> <span class="mi">3000</span><span class="p">);</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+              <span class="nx">handleSendCallback</span><span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="nx">er</span><span class="p">);</span>
+            <span class="p">}</span>
+          <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">handleSendCallback</span><span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+          <span class="p">}</span>
+        <span class="p">});</span>
+      <span class="p">};</span>
+    <span class="p">};</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">cb</span> <span class="o">!==</span> <span class="s1">&#39;function&#39;</span><span class="p">)</span> <span class="p">{</span> <span class="nx">cb</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{};</span> <span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">util</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">msg</span><span class="p">))</span> <span class="p">{</span> <span class="nx">msg</span> <span class="o">=</span> <span class="p">[</span> <span class="nx">msg</span> <span class="p">];</span> <span class="p">}</span>
+
+  <span class="nx">msg</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">m</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">m</span><span class="p">.</span><span class="nx">transport</span> <span class="o">=</span> <span class="nx">self</span><span class="p">.</span><span class="nx">transport</span><span class="p">;</span>
+    <span class="p">(</span><span class="nx">makeSend</span><span class="p">())(</span><span class="nx">m</span><span class="p">,</span> <span class="nx">handleCallback</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">};</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Publish Horseshoe constructor to module's public interface</p></div></div><div class="code"><div class="wrapper"><span class="nx">exports</span><span class="p">.</span><span class="nx">Horseshoe</span> <span class="o">=</span> <span class="nx">Horseshoe</span><span class="p">;</span></div></div></div></div></body></html>
