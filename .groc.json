@@ -1,5 +1,5 @@
 {
-  "glob": [ "lib/*.js", "README.md" ],
-  "index": "README.md",
+  "glob": [ "lib/horseshoe.js" ],
+  "index": "lib/horseshoe.js",
   "github": true
 }
