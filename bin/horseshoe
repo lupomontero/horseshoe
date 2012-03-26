@@ -1,0 +1,85 @@
+#!/usr/bin/env node
+
+var
+  path = require('path'),
+  fs = require('fs'),
+  configFile = path.join(process.env.HOME, '.horseshoeconf'),
+  config, message = { to: [], body: '' },
+
+  send = function () {
+    var horseshoe = new (require(__dirname + '/../lib/horseshoe').Horseshoe)(config);
+
+    horseshoe.send(message, function (errors, success) {
+      if (errors && errors.length) {
+        // handle errors
+        // errors is an array with errors for each mail sent (one per recipient)
+        console.log(errors);
+        return process.exit(1);
+      }
+
+      if (!success) {
+        process.stderr.write('Something went wrong :-S');
+        return process.exit(1);
+      }
+
+      process.exit(0);
+    });
+  };
+
+for (var i = 2; i < process.argv.length; i++) {
+  if (process.argv[i] === '-m') {
+    message.body = process.argv[i + 1];
+    i++;
+  } else if (process.argv[i] === '-s') {
+    message.subject = process.argv[i + 1];
+    i++;
+  } else if (process.argv[i] === '-j') {
+    configFile = process.argv[i + 1];
+    i++;
+  } else {
+    message.to.push(process.argv[i]);
+  }
+};
+
+if (!path.existsSync(configFile)) {
+  process.stderr.write('No config file found!');
+  return process.exit(1);
+}
+
+try {
+  config = JSON.parse(fs.readFileSync(configFile));
+} catch (er) {
+  process.stderr.write('Error parsing config file!');
+  return process.exit(1);
+}
+
+if (!message.to.length) {
+  process.stderr.write('No recipients?');
+  return process.exit(1);
+}
+
+message.to = message.to.join(',');
+
+if (!message.body) {
+  // if no body has been set using the -m flag we read stdin
+  process.stdin.resume();
+  process.stdin.setEncoding('utf8');
+
+  process.stdin.on('data', function (chunk) {
+    message.body += chunk;
+  });
+
+  process.stdin.on('end', function () {
+    send();
+  });
+
+  setTimeout(function () {
+    if (!message.body) {
+      process.stderr.write('No body?');
+      process.exit(1);
+    }
+  }, 500);
+
+} else {
+  send();
+}
