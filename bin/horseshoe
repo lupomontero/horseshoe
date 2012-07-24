@@ -75,7 +75,7 @@ for (var i = 2; i < process.argv.length; i++) {
   }
 };
 
-if (!path.existsSync(configFile)) {
+if (!fs.existsSync(configFile)) {
   process.stderr.write('No config file found!');
   return process.exit(1);
 }
