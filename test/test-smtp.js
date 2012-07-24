@@ -22,7 +22,6 @@ suite.addBatch({
       errors.forEach(function (er) {
         assert.ok(er instanceof Error);
         assert.ok(typeof er.message === 'string');
-        assert.ok(er.name === 'HorseshoeError');
         assert.ok(er.email && er.email.to === 'lupo@e-noise.com');
       });
     }
@@ -44,7 +43,6 @@ suite.addBatch({
     'get sender address error': function (er, success) {
       assert.ok(er instanceof Error);
       assert.ok(typeof er.message === 'string');
-      assert.ok(er.name === 'HorseshoeError');
       assert.ok(er.email && er.email.to === 'lupo@e-noise.com');
     }
   },
@@ -72,7 +70,6 @@ suite.addBatch({
         assert.ok(er instanceof Error);
         assert.ok(typeof er.message === 'string');
         assert.ok(/ECONNREFUSED/.test(er.message));
-        assert.ok(er.name === 'HorseshoeError');
         assert.ok(er.email && er.email.to === 'lupo@e-noise.com');
       });
     }
