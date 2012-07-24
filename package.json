@@ -1,9 +1,9 @@
 {
   "name": "horseshoe",
   "description": "A wrapper around nodemailer used for sending email using handlebars templates.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "config" : { "publishtest" : false },
-  "author" : "Lupo Montero <lupo@e-noise.com> (http://www.e-noise.com)",
+  "author" : "Lupo Montero <lupo@e-noise.com> (http://lupomontero.com)",
   "repository" : {
     "type" : "git",
     "url" : "https://github.com/E-NOISE/horseshoe"
@@ -17,15 +17,18 @@
   },
   "main": "./lib/horseshoe.js",
   "dependencies": {
-    "hbs": "1.0.1",
-    "nodemailer": "0.3.4"
+    "hbs": "1.0.4",
+    "nodemailer": "0.3.21"
   },
   "devDependencies": {
-    "vows": "0.6.2",
-    "jslint": "0.1.4",
-    "groc": "0.2.8"
+    "vows": "0.6.3",
+    "jslint": "0.1.8",
+    "groc": "0.2.15"
   },
   "directories": { "test": "./test" },
-  "scripts": { "test": "make runtests" },
+  "scripts": {
+    "pretest": "find ./lib -name '*.js' -print0 | xargs -0 ./node_modules/jslint/bin/jslint.js",
+    "test": "find ./test -name 'test-*.js' -print0 | xargs -0 ./node_modules/vows/bin/vows --spec"
+  },
   "engines": { "node": ">= 0.6.1" }
 }
