@@ -145,3 +145,9 @@ Example:
       secret: "YOUR-AMAZON-SES-SECRET"
     });
 
+### Postmark 
+
+    var horseshoe = new (require('horseshoe').Horseshoe)({
+      transport: 'postmark',
+      key: "YOUR-POSTMARK-KEY"
+    });
