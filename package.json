@@ -2,33 +2,25 @@
   "name": "horseshoe",
   "description": "A wrapper around nodemailer used for sending email using handlebars templates.",
   "version": "0.0.3",
-  "config" : { "publishtest" : false },
-  "author" : "Lupo Montero <lupo@e-noise.com> (http://lupomontero.com)",
-  "repository" : {
-    "type" : "git",
-    "url" : "https://github.com/E-NOISE/horseshoe"
+  "author": "Lupo Montero <lupo@e-noise.com> (http://lupomontero.com)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/E-NOISE/horseshoe"
   },
-  "bugs" : {
-    "url" : "http://github.com/E-NOISE/horseshoe/issues"
+  "bugs": {
+    "url": "http://github.com/E-NOISE/horseshoe/issues"
   },
   "directories": {
-    "test": "./test",
-    "doc": "./docs"
+    "test": "./test"
   },
   "main": "./lib/horseshoe.js",
   "dependencies": {
-    "hbs": "1.0.4",
-    "nodemailer": "0.3.21"
+    "hbs": "2.0.1",
+    "nodemailer": "0.3.35"
   },
-  "devDependencies": {
-    "vows": "0.6.3",
-    "jslint": "0.1.8",
-    "groc": "0.2.15"
-  },
-  "directories": { "test": "./test" },
-  "scripts": {
-    "pretest": "find ./lib -name '*.js' -print0 | xargs -0 ./node_modules/jslint/bin/jslint.js",
-    "test": "find ./test -name 'test-*.js' -print0 | xargs -0 ./node_modules/vows/bin/vows --spec"
-  },
-  "engines": { "node": ">= 0.8.2" }
+  "devDependencies": {},
+  "scripts": {},
+  "engines": {
+    "node": ">= 0.8.x"
+  }
 }

@@ -1,0 +1,9 @@
+{
+  "transport": "smtp",
+  "sender": "ENOISE dev server <noreply@e-noise.com>",
+  "host": "mail.e-noise.com",
+  "port": 587,
+  "use_authentication": true,
+  "user": "noreply@e-noise.com",
+  "pass": "oF8iequa3wu0raiyo6eDaep5toh4ief0"
+}
