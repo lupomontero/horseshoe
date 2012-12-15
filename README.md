@@ -133,33 +133,49 @@ var horseshoe = new Horseshoe({ transport: 'sendmail' });
 ### SMTP
 
 ```javascript
-var horseshoe = new Horseshoe({
-  transport: 'smtp',
-  sender: 'Someone <someone@somewhere.com>',
+var horseshoe = new Horseshoe('SMTP', {
+  from: 'Someone <someone@somewhere.com>',
   host: 'mail.somewhere.com',
   port: 587,
-  use_authentication: true,
-  user: 'someone@somewhere.com',
-  pass: 'somepassowrd'
+  secureConnection: true,
+  auth: {
+    user: 'someone@somewhere.com',
+    pass: 'somepassowrd'
+  }
 });
 ```
 
 ### Amazon SES
 
 ```javascript
-var horseshoe = new Horseshoe({
-  transport: 'ses',
-  key: "YOUR-AMAZON-SES-KEY",
-  secret: "YOUR-AMAZON-SES-SECRET"
+var horseshoe = new Horseshoe('SES', {
+  AWSAccessKeyID: "YOUR-AMAZON-SES-KEY",
+  AWSSecretKey: "YOUR-AMAZON-SES-SECRET"
 });
 ```
 
 ### Postmark
 
+Note that you need to enable SMTP on https://postmarkapp.com/ and then use our
+API key both as username and password.
+
+More info here: http://developer.postmarkapp.com/developer-smtp.html
+
 ```javascript
-var horseshoe = new Horseshoe({
-  transport: 'postmark',
-  key: "YOUR-POSTMARK-KEY"
+var horseshoe = new Horseshoe('SMTP', {
+  service: 'Postmark',
+  auth: {
+    user: "YOUR-POSTMARK-API-KEY",
+    pass: "YOUR-POSTMARK-API-KEY"
+  }
 });
 ```
+
+## Examples
+
+* Send same email to many recipients
+* Send array of emails
+* Send email wihout template (raw body)
+* Send email from the command line
+* Pipe input...
 
