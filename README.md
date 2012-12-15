@@ -6,18 +6,20 @@
 wrapper around [nodemailer](https://github.com/andris9/nodemailer) used for
 sending email using [handlebars](http://handlebarsjs.com/) templates.
 
-`horseshoe` is designed for a very specific use case. We use it at E-NOISE to
+`horseshoe` is designed for a very specific use case. We use it at ENOISE to
 send out system emails using SMTP and Amazon SES. This emails are predesigned
-using `handlebars` templates and then rendered and sent this module.
+using `handlebars` templates and then rendered and sent using this module.
 
-`horseshoe` renders templates using the data specified in the `message`
+`horseshoe` renders templates using the `data` specified in the `message`
 object:
 
-    var message = {
-      to: 'someone@somewhere.com',
-      template: 'users-signup',
-      data: { user: { firstname: 'Lupo' } }
-    };
+```javascript
+var message = {
+  to: 'someone@somewhere.com',
+  template: 'users-signup',
+  data: { user: { firstname: 'Lupo' } }
+};
+```
 
 `horseshoe` will search the templates path for files with either a `.txt` or
 `.html` extension (`users-signup.txt` and `users-signup.html` in this case) and
@@ -42,23 +44,25 @@ Let's assume that your script is `myscript.js` and you have a directory called
 
 In `myscript.js`:
 
-    var
-      Horseshoe = require('horseshoe').Horseshoe,
-      horseshoe = new Horseshoe({ transport: 'sendmail' }),
-      message = {
-        to: 'someone@somewhere.com',
-        template: 'users-signup',
-        data: { user: { firstname: 'Lupo' } }
-      };
+```javascript
+var
+  Horseshoe = require('horseshoe'),
+  horseshoe = new Horseshoe({ transport: 'sendmail' }),
+  message = {
+    to: 'someone@somewhere.com',
+    template: 'users-signup',
+    data: { user: { firstname: 'Lupo' } }
+  };
 
-    horseshoe.setTemplatesPath(__dirname + '/mail_templates/');
-    horseshoe.send(message, function (errors, success) {
-      if (errors && errors.length) {
-        // handle errors
-        // errors is an array with errors for each mail sent (one per recipient)
-        console.log(errors);
-      }
-    });
+horseshoe.setTemplatesPath(__dirname + '/mail_templates/');
+horseshoe.send(message, function (errors, success) {
+  if (errors && errors.length) {
+    // handle errors
+    // errors is an array with errors for each mail sent (one per recipient)
+    console.log(errors);
+  }
+});
+```
 
 Note that `horseshoe.send()` takes a single message in this example, but we can
 also pass an array of messages.
@@ -84,70 +88,78 @@ The `mail_templates/users-signup.txt` template:
 
 Example:
 
-    var
-      Horseshoe = require('horseshoe').Horseshoe,
-      horseshoe = new Horseshoe({ transport: 'sendmail' }),
-      messages = [
-        {
-          to: 'someone@somewhere.com',
-          template: 'users-signup',
-          data: { user: { firstname: 'Lupo' } }
-        },
-        {
-          to: 'someone.else@somewhere.com',
-          template: 'users-signup',
-          data: { user: { firstname: 'Someone' } }
-        }
-      ];
+```javascript
+var
+  Horseshoe = require('horseshoe'),
+  horseshoe = new Horseshoe({ transport: 'sendmail' }),
+  messages = [
+    {
+      to: 'someone@somewhere.com',
+      template: 'users-signup',
+      data: { user: { firstname: 'Lupo' } }
+    },
+    {
+      to: 'someone.else@somewhere.com',
+      template: 'users-signup',
+      data: { user: { firstname: 'Someone' } }
+    }
+  ];
 
-    horseshoe.on('data', function (error, success) {
-      if (error) {
-        // something went wrong
-      } else {
-        // email was sent...
-      }
-    });
-
-    horseshoe.on('end', function () {
-      // all messages have been proceesed
-    });
-
-    horseshoe.send(messages);
+horseshoe.send(messages)
+  .on('error', function (err) {
+    // something went wrong
+  })
+  .on('data', function (data) {
+    // email was sent...
+  })
+  .on('end', function () {
+    // all messages have been proceesed
+  });
+```
 
 ## Supported transports
 
 ### sendmail
 
-    var Horseshoe = require('horseshoe').Horseshoe;
-    var horseshoe = new Horseshoe({ transport: 'sendmail' });
+```javascript
+var Horseshoe = require('horseshoe');
+var horseshoe = new Horseshoe({ transport: 'sendmail' });
 
-    // now you can use the horseshoe instance to send email
-    // horseshoe.send(msg, function (errors, success) {});
-    // ...
+// now you can use the horseshoe instance to send email
+// horseshoe.send(msg, function (errors, success) {});
+// ...
+```
 
 ### SMTP
 
-    var horseshoe = new (require('horseshoe').Horseshoe)({
-      transport: 'smtp',
-      sender: 'Someone <someone@somewhere.com>',
-      host: 'mail.somewhere.com',
-      port: 587,
-      use_authentication: true,
-      user: 'someone@somewhere.com',
-      pass: 'somepassowrd'
-    });
+```javascript
+var horseshoe = new Horseshoe({
+  transport: 'smtp',
+  sender: 'Someone <someone@somewhere.com>',
+  host: 'mail.somewhere.com',
+  port: 587,
+  use_authentication: true,
+  user: 'someone@somewhere.com',
+  pass: 'somepassowrd'
+});
+```
 
 ### Amazon SES
 
-    var horseshoe = new (require('horseshoe').Horseshoe)({
-      transport: 'ses',
-      key: "YOUR-AMAZON-SES-KEY",
-      secret: "YOUR-AMAZON-SES-SECRET"
-    });
+```javascript
+var horseshoe = new Horseshoe({
+  transport: 'ses',
+  key: "YOUR-AMAZON-SES-KEY",
+  secret: "YOUR-AMAZON-SES-SECRET"
+});
+```
 
-### Postmark 
+### Postmark
 
-    var horseshoe = new (require('horseshoe').Horseshoe)({
-      transport: 'postmark',
-      key: "YOUR-POSTMARK-KEY"
-    });
+```javascript
+var horseshoe = new Horseshoe({
+  transport: 'postmark',
+  key: "YOUR-POSTMARK-KEY"
+});
+```
+
