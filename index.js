@@ -1,199 +1,176 @@
-/*jslint indent: 2, nomen: true, plusplus: true, sloppy: true, stupid: true */
-
-// ## Dependencies
 var
-  util = require('util'),
+  path = require('path'),
   fs = require('fs'),
-  events = require('events'),
-  hbs = require('hbs');
+  Stream = require('stream'),
+  nodemailer = global.nodemailer || require('nodemailer'),
+  Handlebars = require('handlebars');
 
-// ## Horseshoe( options )
-// Constructor.
-//
-// #### Arguments
-// * _Object_ **options**
-//
-// Returns: `Horseshoe`
-var Horseshoe = function (options) {
-  options = options || {};
-  options.transport = (options.transport || 'sendmail').toLowerCase();
-  this.nodemailer = options.nodemailer || require('nodemailer');
-  this.sender = options.sender || options.user;
-  this.tmplPath = options.tmplPath || __dirname;
-
-  switch (options.transport) {
-  case 'smtp':
-    this.transport = this.nodemailer.createTransport("SMTP", {
-      host: options.host,
-      port: options.port,
-      use_authentication: true,
-      /* ssl: true, */
-      user: options.user,
-      pass: options.pass
-    });
-    break;
-  case 'ses':
-    this.transport = this.nodemailer.createTransport("SES", {
-      AWSAccessKeyID: options.key, // required
-      AWSSecretKey: options.secret // required
-      /* ServiceUrl: 'https://email.us-east-1.amazonaws.com' */ // optional
-    });
-    break;
-  case 'postmark':
-    this.transport = this.nodemailer.createTransport("postmark", {
-      PostMarkApiKey: options.key
-    });
-    break;
-  case 'sendmail':
-    options.path = options.path || "/usr/bin/sendmail";
-    this.transport = this.nodemailer.createTransport("Sendmail", options.path);
-    break;
-  default:
-    throw new Error('Horseshoe: Unknown transport "' + options.transport + '"');
-  }
-};
-
-// Inherit from `EventEmitter`
-util.inherits(Horseshoe, events.EventEmitter);
-
-// ## Methods
-
-// ### setTemplatesPath( )
-// Set path to template files.
-//
-// #### Arguments
-// * _String_ **str** Path to template files.
-//
-// Returns: `void`
-Horseshoe.prototype.setTemplatesPath = function (str) {
-  this.tmplPath = str;
-};
-
-// ### render( msg )
-// Render message using template.
-//
-// #### Arguments
-// * _Object_ **msg** A message object.
-//
-// Returns: `void`
-Horseshoe.prototype.render = (function () {
-  var
-    self = this,
-    cache = {},
-    compile = function (fname) {
-      // if already in cache we return cached value
-      if (cache.hasOwnProperty(fname)) { return cache[fname]; }
-
-      if (fs.existsSync(fname)) {
-        cache[fname] = hbs.compile(fs.readFileSync(fname, 'utf8'));
-        return cache[fname];
-      }
-    };
-
-  return function (msg) {
-    var
-      htmlPath = this.tmplPath + msg.template + '.html',
-      textPath = this.tmplPath + msg.template + '.txt',
-      body, textTmplRawArray;
-
-    if (!msg.data) { msg.data = {}; }
-
-    msg.data.blockHelpers = null;
-
-    cache[htmlPath] = compile(htmlPath);
-    if (typeof cache[htmlPath] === 'function') {
-      msg.html = cache[htmlPath](msg.data);
-    } else {
-      delete cache[htmlPath];
+function compile(fname, cb) {
+  fs.exists(fname, function (exists) {
+    if (!exists) {
+      // Fail silently...
+      //console.log('Template "' + fname + '" doesnt exist!');
+      return cb(null, function () {});
     }
 
-    cache[textPath] = compile(textPath);
-    if (typeof cache[textPath] === 'function') {
-      body = cache[textPath](msg.data);
-      textTmplRawArray = body.split('\n');
+    fs.readFile(fname, function (err, source) {
+      var fn;
+
+      if (err) {
+        // Fail silently...
+        //console.log('Error readind template "' + fname + '".');
+        return cb(null, function () {});
+      }
+
+      cb(null, Handlebars.compile(source.toString()));
+    });
+  });
+}
+
+function render(msg, cb) {
+  var
+    self = this,
+    cache = self._tmplCache,
+    htmlPath = path.join(self._tmplPath, msg.template + '.html'),
+    textPath = path.join(self._tmplPath, msg.template + '.txt'),
+    count = 0;
+
+  function done() { if (++count === 2) { cb(); } }
+
+  if (!msg.template) { return cb(null); }
+  if (!msg.data) { msg.data = {}; }
+
+  // If not in cache we need to compile!
+  if (typeof cache[htmlPath] !== 'function') {
+    self._compile(htmlPath, function (err, fn) {
+      if (err) { return cb(err); }
+      try {
+        msg.html = fn(msg.data);
+      } catch (err) {
+        return cb(err);
+      }
+      cache[htmlPath] = fn;
+      done();
+    });
+  } else {
+    msg.html = cache[htmlPath](msg.data);
+    done();
+  }
+
+  function parseTextBody(body) {
+    var textTmplRawArray;
+
+    if (typeof body !== 'string') { return; }
+
+    textTmplRawArray = body.split('\n');
+    if (!msg.subject) {
       msg.subject = textTmplRawArray.shift();
       textTmplRawArray.shift(); // remove empty line after subject line
-      msg.body = textTmplRawArray.join('\n');
-    } else {
-      delete cache[textPath];
     }
-  };
-}());
 
-// ### send( msg, cb )
-// Send message.
-//
-// #### Arguments
-// * _Object_ | _Array_ **msg** A message object or an array of messages.
-// * _Function_ **cb** Callback function to be invoked when done.
-//
-// Returns: `void`
-Horseshoe.prototype.send = function (msg, cb) {
+    msg.text = textTmplRawArray.join('\n');
+  }
+
+  if (typeof cache[textPath] !== 'function') {
+    self._compile(textPath, function (err, fn) {
+      if (err) { return cb(err); }
+      try {
+        parseTextBody(fn(msg.data));
+      } catch (err) {
+        return cb(err);
+      }
+      cache[textPath] = fn;
+      done();
+    });
+  } else {
+    parseTextBody(cache[textPath](msg.data));
+    done();
+  }
+}
+
+function sendMessage(transport, msg, cb, retries, errors) {
+  var self = this;
+
+  if (!retries) { retries = 0; }
+  if (!errors) { errors = []; }
+
+  if (retries > 2) {
+    var err = new Error('Retried 3 times!');
+    err.msg = msg;
+    err.transport = transport;
+    err.attempts = errors;
+    return cb(err);
+  }
+
+  this._render(msg, function (err) {
+    if (err) { return cb(err); }
+    transport.sendMail(msg, function (err, res) {
+      if (err) {
+        errors.push(err);
+        return sendMessage.call(self, transport, msg, cb, ++retries, errors);
+      }
+      res.messageObject = msg;
+      cb(null, res);
+    });
+  });
+}
+
+function createStream() {
   var
     self = this,
-    processed = 0,
-    errors = [],
+    s = new Stream(),
+    transport = self._createTransport(),
+    count = 0,
+    processed = 0;
 
-    handleCallback = function (er, success) {
-      if (er) { errors.push(er); }
-      processed++;
-      if (processed === msg.length) {
-        self.emit('end');
-        if (errors.length) { return cb(errors); }
-        cb(null, true);
+  s.readable = true;
+  s.writable = true;
+  s.destroy = function () { s.writable = false; };
+
+  s.write = function (msg) {
+    count += 1;
+    sendMessage.call(self, transport, msg, function (err, res) {
+      if (err) { return s.emit('error', err); }
+      s.emit('data', res);
+      processed += 1;
+    });
+  };
+
+  s.end = function (msg) {
+    var intvl;
+
+    if (arguments.length) { s.write(msg); }
+
+    intvl = setInterval(function () {
+      if (count === processed) {
+        transport.close();
+        s.emit('end');
+        clearInterval(intvl);
       }
+    }, 25);
+    s.destroy();
+  };
+
+  return s;
+}
+
+// Public interface
+module.exports = function (type, options) {
+  return {
+    _tmplPath: options.tmplPath || process.cwd() + '/mail_templates',
+    _tmplCache: options.tmplCache || {},
+    _compile: compile,
+    _render: render,
+    _createTransport: function () {
+      return nodemailer.createTransport(type, options);
     },
-
-    makeSend = function () {
-      var
-        retries = 0,
-        handleSendCallback = function (msg, er, success) {
-          if (er) {
-            er = new Error(er.message);
-            er.email = msg;
-            // errors are emitted as data because otherwise the whole queue
-            // stops...
-            self.emit('data', er);
-            handleCallback(er);
-          } else {
-            self.emit('data', null, success);
-            handleCallback(null, success);
-          }
-        };
-
-      return function send(msg, cb) {
-        if (!msg.sender) { msg.sender = self.sender; }
-        if (msg.template) {
-          try {
-            self.render(msg);
-          } catch (er) {
-            return handleSendCallback(msg, er);
-          }
-        }
-
-        self.nodemailer.sendMail(msg, function (er, success) {
-          if (er) {
-            if (retries < 3) {
-              retries++;
-              setTimeout(function () { send(msg, cb); }, 3000);
-            } else {
-              handleSendCallback(msg, er);
-            }
-          } else {
-            handleSendCallback(msg, null, true);
-          }
-        });
-      };
-    };
-
-  if (typeof cb !== 'function') { cb = function () {}; }
-  if (!util.isArray(msg)) { msg = [ msg ]; }
-
-  msg.forEach(function (m) {
-    m.transport = self.transport;
-    (makeSend())(m, handleCallback);
-  });
+    send: function (msg, cb) {
+      var transport = this._createTransport();
+      return sendMessage.call(this, transport,  msg, function (err, res) {
+        transport.close(); // Make sure we close de transport pool when done!
+        return cb(err, res);
+      });
+    },
+    createStream: createStream
+  };
 };
-
-// Publish Horseshoe constructor to module's public interface
-module.exports = Horseshoe;

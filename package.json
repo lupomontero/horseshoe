@@ -14,13 +14,15 @@
     "test": "./test"
   },
   "dependencies": {
-    "hbs": "~2.0.2",
-    "nodemailer": "~0.3.44"
+    "nodemailer": "~0.3.44",
+    "handlebars": "~1.0.10",
+    "nopt": "~2.1.1"
   },
   "devDependencies": {
     "grunt": "~0.4.0",
     "grunt-jslint": "~0.2.5",
-    "grunt-contrib-nodeunit": "~0.1.2"
+    "grunt-contrib-nodeunit": "~0.1.2",
+    "JSONStream": "~0.4.3"
   },
   "scripts": {
     "pretest": "grunt jslint",

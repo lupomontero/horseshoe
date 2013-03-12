@@ -1,46 +1,30 @@
-var
-  fs = require('fs'),
-  Horseshoe = require(__dirname + '/../lib/horseshoe'),
-  defaultConfigs = {
-    smtp: {
-      host: 'mail.somewhere.com',
-      port: 587,
-      use_authentication: true,
-      user: 'someone@somewhere.com',
-      pass: 'somepassword'
-    },
-    ses: {
-      key: 'YOUR-AMAZON-SES-KEY',
-      secret: 'YOUR-AMAZON-SES-SECRET'
-    },
-    postmark: { key: 'YOUR-POSTMARK-KEY' }
-  },
-
-  config = function (type) {
-    var
-      configObj = {},
-      configFile = __dirname + '/config-' + type + '.json',
-      nodemailer;
-
-    if (process.env.NODE_ENV === 'production') {
-      if (!fs.existsSync(configFile)) {
-        throw new Error('No config file!');
-      }
-      configObj = require(configFile);
-    } else {
-      nodemailer = require(__dirname + '/mock-nodemailer');
-      configObj = defaultConfigs[type];
-      configObj.transport = type;
-      configObj.sender = "someone <someone@somewhere.com>";
-      configObj.nodemailer = nodemailer;
+if (process.env.NODE_ENV === 'no-mocks') {
+  console.log('NOT USING MOCKS! EMAILS WILL BE SENT FOR REAL!');
+  try {
+    global.config = require('./config.json');
+  } catch (err) {
+    console.error('Make sure you create a test/config.json file before ' +
+                  'running the tests without mockups!');
+    process.exit(1);
+  }
+} else {
+  // Mock nodemailer
+  global.nodemailer = {
+    createTransport: function (type, options) {
+      return {
+        close: function () {},
+        sendMail: function (msg, cb) {
+          if (msg.to === 'bad email') { return cb('error!'); }
+          cb(null, { failedRecipients: [], message: '', messageId: '' });
+        }
+      };
     }
-
-    return configObj;
   };
+  global.config = {
+    'sendmail': {},
+    'SMTP': {},
+    'SES': {}
+  };
+}
 
-exports.createHorseshoe = function (type) {
-  var h = new Horseshoe(config(type));
-  h.setTemplatesPath(__dirname + '/mail_templates/');
-  return h;
-};
-
+global.config.SMTP.tmplPath = __dirname + '/mail_templates';
