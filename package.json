@@ -1,25 +1,31 @@
 {
   "name": "horseshoe",
   "description": "A wrapper around nodemailer used for sending email using handlebars templates.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "author": "Lupo Montero <lupo@e-noise.com> (http://lupomontero.com)",
   "repository": {
     "type": "git",
-    "url": "https://github.com/E-NOISE/horseshoe"
+    "url": "https://github.com/lupomontero/horseshoe"
   },
   "bugs": {
-    "url": "http://github.com/E-NOISE/horseshoe/issues"
+    "url": "http://github.com/lupomontero/horseshoe/issues"
   },
   "directories": {
     "test": "./test"
   },
-  "main": "./lib/horseshoe.js",
   "dependencies": {
-    "hbs": "2.0.1",
-    "nodemailer": "0.3.35"
+    "hbs": "~2.0.2",
+    "nodemailer": "~0.3.44"
   },
-  "devDependencies": {},
-  "scripts": {},
+  "devDependencies": {
+    "grunt": "~0.4.0",
+    "grunt-jslint": "~0.2.5",
+    "grunt-contrib-nodeunit": "~0.1.2"
+  },
+  "scripts": {
+    "pretest": "grunt jslint",
+    "test": "grunt nodeunit"
+  },
   "engines": {
     "node": ">= 0.8.x"
   }
