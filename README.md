@@ -164,3 +164,9 @@ The command line has its own help file. Just run:
 or
 
     horseshoe --help
+
+## TODO
+
+* Finish command line interface (and document it)
+* Add support for other template engines?
+* ...
