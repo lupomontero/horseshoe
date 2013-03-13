@@ -161,6 +161,6 @@ The command line has its own help file. Just run:
 
     horseshoe
 
-    or
+or
 
     horseshoe --help
