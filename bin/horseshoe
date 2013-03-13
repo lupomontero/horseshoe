@@ -71,7 +71,7 @@ if (options.help || !options.argv.remain.length) {
     '-x  ' + '--text        '.grey + 'The plain text message body.',
     '-m  ' + '--html        '.grey + 'HTML content.',
     '-t  ' + '--tmpl        '.grey + 'Handlebars template.',
-    '-p  ' + '--tmplpath   '.grey + 'Path to Handlebars template files.',
+    '-p  ' + '--tmplpath    '.grey + 'Path to Handlebars template files.',
     '-d  ' + '--data        '.grey + 'Data to be used as context for Handlebars template.',
     '-c  ' + '--conf        '.grey + 'Path to config file. Default is $HOME/.horseshoe.json',
     '-j  ' + '--json        '.grey + 'Output in JSON format.',
