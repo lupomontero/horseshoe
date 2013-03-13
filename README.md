@@ -157,4 +157,10 @@ var mailer = require('horseshoe')('SMTP', {
 
 ## Command line tool
 
-...
+The command line has its own help file. Just run:
+
+    horseshoe
+
+    or
+
+    horseshoe --help

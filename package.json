@@ -10,6 +10,9 @@
   "bugs": {
     "url": "http://github.com/lupomontero/horseshoe/issues"
   },
+  "bin": {
+    "horseshoe": "./bin/horseshoe"
+  },
   "directories": {
     "test": "./test"
   },
