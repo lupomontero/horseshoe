@@ -25,8 +25,10 @@ var message = {
 `.html` extension (`users-signup.txt` and `users-signup.html` in this case) and
 render them using `handlebars` to create the email body.
 
-The `horseshoe.send()` method can send both individual messages or an array of
-messages.
+`horseshoe` exports a single function. You invoke this function to get a
+`mailer` object that you can the use to either send a single message with
+`mailer.send()` or create a writable stream with `mailer.createStream()` to send
+multiple messages using the streaming interface.
 
 `horseshoe` will retry to send individual emails if they fail (up to 3 times).
 
@@ -35,6 +37,10 @@ messages.
 ## Installation
 
     npm install horseshoe
+
+To install globally and have the command line tool placed in your PATH use:
+
+    npm install horseshoe -g
 
 ## Usage
 
@@ -46,26 +52,19 @@ In `myscript.js`:
 
 ```javascript
 var
-  Horseshoe = require('horseshoe'),
-  horseshoe = new Horseshoe({ transport: 'sendmail' }),
+  mailer = require('horseshoe')('Sendmail', { tmplpath: __dirname + '/mail_templates/' }),
   message = {
     to: 'someone@somewhere.com',
     template: 'users-signup',
     data: { user: { firstname: 'Lupo' } }
   };
 
-horseshoe.setTemplatesPath(__dirname + '/mail_templates/');
-horseshoe.send(message, function (errors, success) {
-  if (errors && errors.length) {
-    // handle errors
-    // errors is an array with errors for each mail sent (one per recipient)
-    console.log(errors);
+mailer.send(message, function (error, response) {
+  if (error) {
+    // handle error
   }
 });
 ```
-
-Note that `horseshoe.send()` takes a single message in this example, but we can
-also pass an array of messages.
 
 The `mail_templates/users-signup.txt` template:
 
@@ -77,67 +76,52 @@ The `mail_templates/users-signup.txt` template:
 
     Bye!
 
-## Events
-
-`horseshoe` is an `EventEmitter` and the following events are implemented:
-
-* `data`: This event is emitted for every individual email sent. Listeners will
-  be passed `error` and `success` arguments.
-* `end`: This event is emitted when all messages have been sent. No arguments
-  are passed to when this event is emitted.
+## Streaming interface
 
 Example:
 
 ```javascript
 var
-  Horseshoe = require('horseshoe'),
-  horseshoe = new Horseshoe({ transport: 'sendmail' }),
+  stream = require('horseshoe')('Sendmail').createStream(),
   messages = [
-    {
-      to: 'someone@somewhere.com',
-      template: 'users-signup',
-      data: { user: { firstname: 'Lupo' } }
-    },
-    {
-      to: 'someone.else@somewhere.com',
-      template: 'users-signup',
-      data: { user: { firstname: 'Someone' } }
-    }
+    { to: 'someone@somewhere.com', template: 'signup', data: { name: 'Lupo' } },
+    { to: 'someone.else@somewhere.com', template: 'signup', data: { name: 'Someone' } }
   ];
 
-horseshoe.send(messages)
-  .on('error', function (err) {
-    // something went wrong
-  })
-  .on('data', function (data) {
-    // email was sent...
-  })
-  .on('end', function () {
-    // all messages have been proceesed
+  stream.on('error', function (error) { /*handle error*/ });
+  stream.on('data', function (response) { /*info about message sent */ });
+  stream.on('end', function () { /*done sending*/ });
+
+  messages.forEach(function (message) {
+    stream.write(message);
   });
+
+  stream.end();
 ```
 
 ## Supported transports
 
-### sendmail
+`horseshoe` passes its options to `nodemailer` and so you can use all transports
+supported by `nodemailer`.
+
+For more info see nodemailer's [README](https://github.com/andris9/nodemailer).
+
+### Sendmail example
 
 ```javascript
-var Horseshoe = require('horseshoe');
-var horseshoe = new Horseshoe({ transport: 'sendmail' });
-
-// now you can use the horseshoe instance to send email
-// horseshoe.send(msg, function (errors, success) {});
-// ...
+var mailer = require('horseshoe')('Sendmail', {
+  path: "/usr/local/bin/sendmail",
+  args: ["-f foo@blurdybloop.com"]
+});
 ```
 
 ### SMTP
 
 ```javascript
-var horseshoe = new Horseshoe('SMTP', {
-  from: 'Someone <someone@somewhere.com>',
+var mailer = require('horseshoe')('SMTP', {
+  sender: 'Someone <someone@somewhere.com>',
   host: 'mail.somewhere.com',
   port: 587,
-  secureConnection: true,
   auth: {
     user: 'someone@somewhere.com',
     pass: 'somepassowrd'
@@ -148,7 +132,7 @@ var horseshoe = new Horseshoe('SMTP', {
 ### Amazon SES
 
 ```javascript
-var horseshoe = new Horseshoe('SES', {
+var mailer = require('horseshoe')('SES', {
   AWSAccessKeyID: "YOUR-AMAZON-SES-KEY",
   AWSSecretKey: "YOUR-AMAZON-SES-SECRET"
 });
@@ -162,7 +146,7 @@ API key both as username and password.
 More info here: http://developer.postmarkapp.com/developer-smtp.html
 
 ```javascript
-var horseshoe = new Horseshoe('SMTP', {
+var mailer = require('horseshoe')('SMTP', {
   service: 'Postmark',
   auth: {
     user: "YOUR-POSTMARK-API-KEY",
@@ -171,11 +155,6 @@ var horseshoe = new Horseshoe('SMTP', {
 });
 ```
 
-## Examples
+## Command line tool
 
-* Send same email to many recipients
-* Send array of emails
-* Send email wihout template (raw body)
-* Send email from the command line
-* Pipe input...
-
+...
