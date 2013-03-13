@@ -14,10 +14,63 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "singleLineComment": ["//"],
           "name": "JavaScript"
         },
-        "sourcePath": "/Users/lupo/Documents/workspace/horseshoe/lib/horseshoe.js",
-        "projectPath": "lib/horseshoe.js",
+        "sourcePath": "/Users/lupo/Documents/workspace/horseshoe/index.js",
+        "projectPath": "index.js",
         "targetPath": "index",
-        "title": "index"
+        "firstHeader": {
+          "type": "heading",
+          "data": {
+            "level": 1,
+            "title": "Horseshoe",
+            "slug": "horseshoe",
+            "isFileHeader": true
+          },
+          "depth": 1,
+          "children": [
+            {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "compile",
+                "slug": "compile"
+              },
+              "depth": 2
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "render",
+                "slug": "render"
+              },
+              "depth": 2
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "sendMessage",
+                "slug": "sendmessage"
+              },
+              "depth": 2
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "createStream",
+                "slug": "createstream"
+              },
+              "depth": 2
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "Public interface",
+                "slug": "public-interface"
+              },
+              "depth": 2
+            }
+          ]
+        },
+        "title": "Horseshoe"
       },
       "depth": 1,
       "outline": [
@@ -25,97 +78,42 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "type": "heading",
           "data": {
             "level": 2,
-            "title": "Dependencies",
-            "slug": "dependencies"
+            "title": "compile",
+            "slug": "compile"
           },
           "depth": 2
         }, {
           "type": "heading",
           "data": {
             "level": 2,
-            "title": "Horseshoe( options )",
-            "slug": "horseshoe-options-"
+            "title": "render",
+            "slug": "render"
           },
-          "depth": 2,
-          "children": [
-            {
-              "type": "heading",
-              "data": {
-                "level": 4,
-                "title": "Arguments",
-                "slug": "arguments"
-              },
-              "depth": 4
-            }
-          ]
+          "depth": 2
         }, {
           "type": "heading",
           "data": {
             "level": 2,
-            "title": "Methods",
-            "slug": "methods"
+            "title": "sendMessage",
+            "slug": "sendmessage"
           },
-          "depth": 2,
-          "children": [
-            {
-              "type": "heading",
-              "data": {
-                "level": 3,
-                "title": "setTemplatesPath( )",
-                "slug": "settemplatespath-"
-              },
-              "depth": 3,
-              "children": [
-                {
-                  "type": "heading",
-                  "data": {
-                    "level": 4,
-                    "title": "Arguments",
-                    "slug": "arguments"
-                  },
-                  "depth": 4
-                }
-              ]
-            }, {
-              "type": "heading",
-              "data": {
-                "level": 3,
-                "title": "render( msg )",
-                "slug": "render-msg-"
-              },
-              "depth": 3,
-              "children": [
-                {
-                  "type": "heading",
-                  "data": {
-                    "level": 4,
-                    "title": "Arguments",
-                    "slug": "arguments"
-                  },
-                  "depth": 4
-                }
-              ]
-            }, {
-              "type": "heading",
-              "data": {
-                "level": 3,
-                "title": "send( msg, cb )",
-                "slug": "send-msg-cb-"
-              },
-              "depth": 3,
-              "children": [
-                {
-                  "type": "heading",
-                  "data": {
-                    "level": 4,
-                    "title": "Arguments",
-                    "slug": "arguments"
-                  },
-                  "depth": 4
-                }
-              ]
-            }
-          ]
+          "depth": 2
+        }, {
+          "type": "heading",
+          "data": {
+            "level": 2,
+            "title": "createStream",
+            "slug": "createstream"
+          },
+          "depth": 2
+        }, {
+          "type": "heading",
+          "data": {
+            "level": 2,
+            "title": "Public interface",
+            "slug": "public-interface"
+          },
+          "depth": 2
         }
       ]
     }
