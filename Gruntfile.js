@@ -1,45 +1,39 @@
 module.exports = function (grunt) {
 
+  grunt.loadNpmTasks('grunt-jslint');
+  grunt.loadNpmTasks('grunt-contrib-nodeunit');
+
   // Project configuration.
   grunt.initConfig({
 
-    pkg: '<json:package.json>',
+    pkg: grunt.file.readJSON('package.json'),
 
-    test: {
-      files: [ 'test/postmark-spec.js' ]
+    jslint: {
+      files: [ 'Gruntfile.js', 'index.js', 'bin/horseshoe', 'test/**/*.js' ],
+      directives: {
+        indent: 2,
+        node: true,
+        sloppy: true,
+        nomen: true,
+        plusplus: true
+      },
+      options: {
+        shebang: true
+      }
     },
 
-    lint: {
-      files: [ 'grunt.js', 'lib/**/*.js', 'test/**/*.js' ]
+    nodeunit: {
+      files: [ 'test/test-*.js' ]
     },
 
     watch: {
       files: '<config:lint.files>',
       tasks: 'default'
-    },
-
-    jshint: {
-      options: {
-        curly: true,
-        eqeqeq: true,
-        immed: true,
-        latedef: true,
-        newcap: true,
-        noarg: true,
-        sub: true,
-        undef: true,
-        boss: true,
-        eqnull: true,
-        node: true
-      },
-      globals: {
-        exports: true
-      }
     }
 
   });
 
   // Default task.
-  grunt.registerTask('default', 'lint test');
+  grunt.registerTask('default', 'jslint nodeunit');
 
 };

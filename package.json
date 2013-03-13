@@ -16,7 +16,8 @@
   "dependencies": {
     "nodemailer": "~0.3.44",
     "handlebars": "~1.0.10",
-    "nopt": "~2.1.1"
+    "nopt": "~2.1.1",
+    "colors": "~0.6.0-1"
   },
   "devDependencies": {
     "grunt": "~0.4.0",

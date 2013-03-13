@@ -46,8 +46,8 @@ function render(msg, cb) {
       if (err) { return cb(err); }
       try {
         msg.html = fn(msg.data);
-      } catch (err) {
-        return cb(err);
+      } catch (exception) {
+        return cb(exception);
       }
       cache[htmlPath] = fn;
       done();
@@ -76,8 +76,8 @@ function render(msg, cb) {
       if (err) { return cb(err); }
       try {
         parseTextBody(fn(msg.data));
-      } catch (err) {
-        return cb(err);
+      } catch (exception) {
+        return cb(exception);
       }
       cache[textPath] = fn;
       done();
@@ -89,13 +89,13 @@ function render(msg, cb) {
 }
 
 function sendMessage(transport, msg, cb, retries, errors) {
-  var self = this;
+  var self = this, err;
 
   if (!retries) { retries = 0; }
   if (!errors) { errors = []; }
 
   if (retries > 2) {
-    var err = new Error('Retried 3 times!');
+    err = new Error('Retried 3 times!');
     err.msg = msg;
     err.transport = transport;
     err.attempts = errors;

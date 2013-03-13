@@ -1,124 +1,104 @@
 #!/usr/bin/env node
 
 var
-  util = require('util'),
   path = require('path'),
-  fs = require('fs'),
-  configFile = path.join(process.env.HOME, '.horseshoeconf'),
-  packageJson = JSON.parse(fs.readFileSync(__dirname + '/../package.json')),
-  config, message = { to: [], body: '' }, showConfig = false,
+  nopt = require("nopt"),
+  colors = require('colors'),
+  argv = process.argv.slice(2),
 
-  usage = function () {
-    return [
-      'usage: horseshoe [-chv]',
-      '                 [-s <subject>] [-m <message>] <recipient1> <recipient2> ...',
-      '',
-      'Options:',
-      '',
-      '  -c  Show configuration.',
-      '  -h  Shows the help you are looking at.',
-      '  -v  Shows the horseshoe module version.',
-      '  -s  The message subject.',
-      '  -m  The message body.',
-      '',
-      'Examples:',
-      '',
-      'Passing the message body as a command line option:',
-      '$ horseshoe -s "This is the subject" -m "Some message" someone@somewhere.com',
-      '',
-      'Piping the message body in the stdin:',
-      '$ echo "some message" | horseshoe -s "The subject" someone@somewhere.com',
-      ''
-    ].join('\n');
+  knownOpts = {
+    subject: String,
+    text: String,
+    html: String,
+    json: Boolean,
+    colors: Boolean,
+    conf: [ path, false ],
+    version: Boolean
   },
 
-  send = function () {
-    var horseshoe = new (require(__dirname + '/../lib/horseshoe').Horseshoe)(config);
+  shorthands = {
+    s: [ '--subject' ],
+    x: [ '--text' ],
+    m: [ '--html' ],
+    t: [ '--tmpl' ],
+    p: [ '--tmpl-path' ],
+    d: [ '--data' ],
+    c: [ '--conf' ],
+    j: [ '--json' ],
+    n: [ '--no-colors' ],
+    "?": [ '--help' ],
+    h: [ '--help' ],
+    v: [ '--version' ]
+  },
 
-    horseshoe.send(message, function (errors, success) {
-      if (errors && errors.length) {
-        // handle errors
-        // errors is an array with errors for each mail sent (one per recipient)
-        console.log(errors);
-        return process.exit(1);
-      }
+  defaults = {
+    subject: null,
+    text: null,
+    html: null,
+    tmpl: null,
+    tmplPath: null,
+    data: null,
+    conf: process.env.HOME + '/.horseshoe.json',
+    json: false,
+    colors: true,
+    help: false,
+    version: false
+  },
 
-      if (!success) {
-        process.stderr.write('Something went wrong :-S');
-        return process.exit(1);
-      }
+  options = nopt(knownOpts, shorthands);
 
-      process.exit(0);
-    });
-  };
-
-for (var i = 2; i < process.argv.length; i++) {
-  if (process.argv[i] === '-h') {
-    process.stdout.write(usage());
-    return process.exit(1);
-  } else if (process.argv[i] === '-v') {
-    process.stdout.write(packageJson.name + ' v' + packageJson.version);
-    return process.exit(1);
-  } else if (process.argv[i] === '-c') {
-    showConfig = true;
-  } else if (process.argv[i] === '-m') {
-    message.body = process.argv[i + 1];
-    i++;
-  } else if (process.argv[i] === '-s') {
-    message.subject = process.argv[i + 1];
-    i++;
-  } else if (process.argv[i] === '-j') {
-    configFile = process.argv[i + 1];
-    i++;
-  } else {
-    message.to.push(process.argv[i]);
-  }
-};
-
-if (!fs.existsSync(configFile)) {
-  process.stderr.write('No config file found!');
-  return process.exit(1);
+if (options.version) {
+  console.log(require("../package.json").version);
+  process.exit(0);
 }
 
-try {
-  config = JSON.parse(fs.readFileSync(configFile));
-} catch (er) {
-  process.stderr.write('Error parsing config file!');
-  return process.exit(1);
+if (options.help || !options.argv.remain.length) {
+  console.log([
+    '',
+    'Usage:'.bold,
+    '',
+    'horseshoe [ <options> ] <email1> [ <email2> ... ]',
+    '',
+    'Options:'.bold,
+    '',
+    '-s  --subject     The message subject.',
+    '-x  --text        The plain text message body.',
+    '-m  --html        HTML content.',
+    '-t  --tmpl        Handlebars template.',
+    '-p  --tmpl-path   Path to Handlebars template files.',
+    '-d  --data        Data to be used as context for Handlebars template.',
+    '-c  --conf        Path to config file. Default is $HOME/.horseshoe.json',
+    '-j  --json        Output in JSON format.',
+    '-n  --no-colors   Dont do output colouring.',
+    '-h  --help        Show this screen you are looking at.',
+    '-v  --version     Show horseshoe\'s version number.',
+    '',
+    'Examples:'.bold,
+    '',
+    '1. Send plain text email using options:',
+    '',
+    'horseshoe ' + '-s "the subject"'.green + ' -t "simple text body"'.yellow +
+      ' someone@somewhere.com'.cyan,
+    '',
+    '2. Send plain text email piping body into horseshoe:',
+    '',
+    'echo ' + '"the body"'.green + ' | horseshoe' + ' -s "the subject"'.yellow +
+      ' someone@somewhere.com'.cyan,
+    '',
+    '3. Send email using template passing data as argument:',
+    '',
+    'horseshoe ' + '-s "the subject"'.green + ' -t "simple text body"'.yellow +
+      ' someone@somewhere.com'.cyan,
+    ''
+  ].join('\n'));
+  process.exit(0);
 }
 
-if (showConfig) {
-  process.stdout.write(util.inspect(config));
-  return process.exit(0);
-}
+Object.keys(defaults).forEach(function (k) {
+  if (!options.hasOwnProperty(k)) { options[k] = defaults[k]; }
+});
 
-if (!message.to.length) {
-  process.stderr.write('No recipients?');
-  return process.exit(1);
-}
+// Disable colouring if asked to do so...
+if (!options.colors) { colors.mode = 'none'; }
 
-message.to = message.to.join(',');
-
-if (!message.body) {
-  // if no body has been set using the -m flag we read stdin
-  process.stdin.resume();
-  process.stdin.setEncoding('utf8');
-
-  process.stdin.on('data', function (chunk) {
-    message.body += chunk;
-  });
-
-  process.stdin.on('end', function () {
-    send();
-  });
-
-  setTimeout(function () {
-    if (!message.body) {
-      process.stderr.write('No body?');
-      process.exit(1);
-    }
-  }, 500);
-
-} else {
-  send();
-}
+console.log(options);
