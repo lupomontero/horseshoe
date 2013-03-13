@@ -14,7 +14,7 @@ var
     text: String,
     html: String,
     tmpl: String,
-    tmplpath: [ path, false ],
+    tmplPath: [ path, false ],
     data: String,
     conf: [ path, false ],
     json: Boolean,
@@ -27,7 +27,7 @@ var
     x: [ '--text' ],
     m: [ '--html' ],
     t: [ '--tmpl' ],
-    p: [ '--tmplpath' ],
+    p: [ '--tmplPath' ],
     d: [ '--data' ],
     c: [ '--conf' ],
     j: [ '--json' ],
@@ -42,7 +42,7 @@ var
     text: null,
     html: null,
     tmpl: null,
-    tmplpath: null,
+    tmplPath: null,
     data: null,
     conf: process.env.HOME + '/.horseshoe.json',
     json: false,
@@ -53,10 +53,17 @@ var
 
   options = nopt(knownOpts, shorthands);
 
+Object.keys(defaults).forEach(function (k) {
+  if (!options.hasOwnProperty(k)) { options[k] = defaults[k]; }
+});
+
 if (options.version) {
   console.log(require("../package.json").version);
   process.exit(0);
 }
+
+// Disable colouring if asked to do so...
+if (!options.colors) { colors.mode = 'none'; }
 
 if (options.help || !options.argv.remain.length) {
   console.log([
@@ -71,7 +78,7 @@ if (options.help || !options.argv.remain.length) {
     '-x  ' + '--text        '.grey + 'The plain text message body.',
     '-m  ' + '--html        '.grey + 'HTML content.',
     '-t  ' + '--tmpl        '.grey + 'Handlebars template.',
-    '-p  ' + '--tmplpath    '.grey + 'Path to Handlebars template files.',
+    '-p  ' + '--tmplPath    '.grey + 'Path to Handlebars template files.',
     '-d  ' + '--data        '.grey + 'Data to be used as context for Handlebars template.',
     '-c  ' + '--conf        '.grey + 'Path to config file. Default is $HOME/.horseshoe.json',
     '-j  ' + '--json        '.grey + 'Output in JSON format.',
@@ -100,25 +107,14 @@ if (options.help || !options.argv.remain.length) {
   process.exit(0);
 }
 
-Object.keys(defaults).forEach(function (k) {
-  if (!options.hasOwnProperty(k)) { options[k] = defaults[k]; }
-});
-
-// Disable colouring if asked to do so...
-if (!options.colors) { colors.mode = 'none'; }
-
-// Try to load config file
-try {
-  var config = require(options.conf);
-} catch (err) {
-  console.error(err.message.red);
-  process.exit(1);
-}
-
+// We create a readable stream to be used for output.
 var res = new Stream();
 res.readable = true;
 res.on('error', function (err) {
+  // Here we are assuming that err has a `message` property. Maybe we should
+  // actually check this.
   console.error('error: '.red + err.message.red);
+  process.exit(1);
 });
 res.on('warning', function (buf) {
   console.error('warning: '.yellow + buf.yellow);
@@ -128,21 +124,50 @@ res.on('data', function (buf) {
 });
 res.on('end', function (buf) {
   console.log(buf);
-  console.log('response ended!');
+  process.exit(0);
 });
 
-// Handle cases where we don't expect anything from  stdin...
-if (options.text && options.subject) {
-  res.emit('error', 'send simple text email!');
-  process.exit(0);
-} else if (options.html) {
-  console.log('send html email!');
-  process.exit(0);
-} else if (options.tmpl && options.data) {
-  console.log('send template passing data as option.');
-  process.exit(0);
+// Try to load config file and make sure it has a valid transport type.
+try {
+  var config = require(options.conf);
+  if ([ 'Sendmail', 'SMTP', 'SES' ].indexOf(config.type) < 0) {
+    throw new Error('Config file MUST contain a "type" property with a value ' +
+                    'of Sendmail, SMTP or SES.');
+  }
+  // Override `tmplPath` is passed as argument.
+  if (options.tmplPath) { config.options.tmplPath = options.tmplPath; }
+} catch (err) {
+  res.emit('warning', [
+    'In order to use horseshoe you need to have at least one configuration ',
+    'file. The default location for this file is ' + process.env.HOME +
+      '/.horseshoe.json.',
+    'You can specify a different config file with the ' + '--conf'.bold +
+      ' option. See ',
+    'horseshoe --help'.bold + ' for more on this.',
+    '',
+    'This file should look something like this:',
+    '',
+    JSON.stringify({
+      type: 'SMTP',
+      options: {
+        sender: 'Someone <you@example.com>',
+        host: 'mail.example.com',
+        port: 587,
+        auth: {
+          user: 'you@example.com',
+          pass: 'xxxxxx'
+        }
+      }
+    }, null, '  '),
+    '',
+    'More info about all the different options here:',
+    'https://github.com/lupomontero/horseshoe',
+    ''
+  ].join('\n'));
+  res.emit('error', err);
 }
 
+// Abstract horseshoe's `mailer.send()`.
 function send(msg) {
   horseshoe(config.type, config.options).send(msg, function (err, response) {
     if (err) { return res.emit('error', err); }
@@ -156,31 +181,50 @@ function send(msg) {
   });
 }
 
-// Handle input from stdin
-// Input can be either JSON (this implies the --tmpl option) or plain text to be
-// used as the body.
-if (options.tmpl) {
+// Handle cases where we don't expect anything from  stdin...
+if (options.text && options.subject) {
+  send({
+    to: options.argv.remain.join(','),
+    subject: options.subject,
+    text: options.text
+  });
+} else if (options.html) {
+  send({
+    to: options.argv.remain.join(','),
+    subject: options.subject,
+    html: options.html
+  });
+} else if (options.tmpl && options.data) {
+  // Put this block in a try/catch block as `JSON.parse` could throw.
+  try {
+    var data = JSON.parse(options.data);
+    send({
+      to: options.argv.remain.join(','),
+      subject: options.subject,
+      template: options.tmpl,
+      data: data
+    });
+  } catch (err) {
+    res.emit('error', err);
+  }
+} else if (options.tmpl) {
+  // Handle template data as input from stdin.
   var parser = JSONStream.parse(true);
-
-  //console.log('render template with data from stdin!');
   process.stdin.resume();
   process.stdin.setEncoding('utf8');
   process.stdin.pipe(parser);
-
   parser.on('error', function (err) {
     console.error(err);
   });
-
   parser.on('data', function (chunk) {
     process.stdout.write('data: ' + chunk);
   });
-
   parser.on('end', function () {
     process.stdout.write('end');
   });
 } else {
+  // Use stdin as message body.
   var text = '';
-  //console.log('use stdin as message body!');
   process.stdin.resume();
   process.stdin.setEncoding('utf8');
   process.stdin.on('data', function (buf) { text += buf; });
