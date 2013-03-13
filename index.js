@@ -1,32 +1,32 @@
+// # Horseshoe
+// _TODO: Have to add more comments!_
 var
   path = require('path'),
   fs = require('fs'),
   Stream = require('stream'),
-  nodemailer = global.nodemailer || require('nodemailer'),
-  Handlebars = require('handlebars');
+  Handlebars = require('handlebars'),
+  // If `nodemailer` has been defined globally we use that. This allows us to
+  // easily replace `nodemailer` with a mockup when running tests.
+  nodemailer = global.nodemailer || require('nodemailer');
 
+// ## compile
+// Compile a Handlebars template from file. If file doesn't exist or can not be
+// read no error will be raised. The callback will be invoked passing a dummy
+// template function that does nothing.
+// NOTE: callback will be invoked with only one argument as no errors can be
+// raised.
 function compile(fname, cb) {
   fs.exists(fname, function (exists) {
-    if (!exists) {
-      // Fail silently...
-      //console.log('Template "' + fname + '" doesnt exist!');
-      return cb(null, function () {});
-    }
-
+    if (!exists) { return cb(function () {}); }
     fs.readFile(fname, function (err, source) {
-      var fn;
-
-      if (err) {
-        // Fail silently...
-        //console.log('Error readind template "' + fname + '".');
-        return cb(null, function () {});
-      }
-
-      cb(null, Handlebars.compile(source.toString()));
+      if (err) { return cb(function () {}); }
+      cb(Handlebars.compile(source.toString()));
     });
   });
 }
 
+// ## render
+// Render a message object before sending.
 function render(msg, cb) {
   var
     self = this,
@@ -42,8 +42,7 @@ function render(msg, cb) {
 
   // If not in cache we need to compile!
   if (typeof cache[htmlPath] !== 'function') {
-    self._compile(htmlPath, function (err, fn) {
-      if (err) { return cb(err); }
+    self._compile(htmlPath, function (fn) {
       try {
         msg.html = fn(msg.data);
       } catch (exception) {
@@ -72,8 +71,7 @@ function render(msg, cb) {
   }
 
   if (typeof cache[textPath] !== 'function') {
-    self._compile(textPath, function (err, fn) {
-      if (err) { return cb(err); }
+    self._compile(textPath, function (fn) {
       try {
         parseTextBody(fn(msg.data));
       } catch (exception) {
@@ -88,6 +86,8 @@ function render(msg, cb) {
   }
 }
 
+// ## sendMessage
+// Send a single email message.
 function sendMessage(transport, msg, cb, retries, errors) {
   var self = this, err;
 
@@ -121,6 +121,8 @@ function sendMessage(transport, msg, cb, retries, errors) {
   });
 }
 
+// ## createStream
+// Create a writable stream that will send message objects written to it.
 function createStream() {
   var
     self = this,
@@ -160,7 +162,7 @@ function createStream() {
   return s;
 }
 
-// Public interface
+// ## Public interface
 module.exports = function (type, options) {
   return {
     _tmplPath: options.tmplPath || process.cwd() + '/mail_templates',
