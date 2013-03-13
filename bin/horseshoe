@@ -2,17 +2,23 @@
 
 var
   path = require('path'),
+  Stream = require('stream'),
   nopt = require("nopt"),
   colors = require('colors'),
+  JSONStream = require('JSONStream'),
+  horseshoe = require('../index'),
   argv = process.argv.slice(2),
 
   knownOpts = {
     subject: String,
     text: String,
     html: String,
+    tmpl: String,
+    tmplpath: [ path, false ],
+    data: String,
+    conf: [ path, false ],
     json: Boolean,
     colors: Boolean,
-    conf: [ path, false ],
     version: Boolean
   },
 
@@ -21,7 +27,7 @@ var
     x: [ '--text' ],
     m: [ '--html' ],
     t: [ '--tmpl' ],
-    p: [ '--tmpl-path' ],
+    p: [ '--tmplpath' ],
     d: [ '--data' ],
     c: [ '--conf' ],
     j: [ '--json' ],
@@ -36,7 +42,7 @@ var
     text: null,
     html: null,
     tmpl: null,
-    tmplPath: null,
+    tmplpath: null,
     data: null,
     conf: process.env.HOME + '/.horseshoe.json',
     json: false,
@@ -61,23 +67,23 @@ if (options.help || !options.argv.remain.length) {
     '',
     'Options:'.bold,
     '',
-    '-s  --subject     The message subject.',
-    '-x  --text        The plain text message body.',
-    '-m  --html        HTML content.',
-    '-t  --tmpl        Handlebars template.',
-    '-p  --tmpl-path   Path to Handlebars template files.',
-    '-d  --data        Data to be used as context for Handlebars template.',
-    '-c  --conf        Path to config file. Default is $HOME/.horseshoe.json',
-    '-j  --json        Output in JSON format.',
-    '-n  --no-colors   Dont do output colouring.',
-    '-h  --help        Show this screen you are looking at.',
-    '-v  --version     Show horseshoe\'s version number.',
+    '-s  ' + '--subject     '.grey + 'The message subject.',
+    '-x  ' + '--text        '.grey + 'The plain text message body.',
+    '-m  ' + '--html        '.grey + 'HTML content.',
+    '-t  ' + '--tmpl        '.grey + 'Handlebars template.',
+    '-p  ' + '--tmplpath   '.grey + 'Path to Handlebars template files.',
+    '-d  ' + '--data        '.grey + 'Data to be used as context for Handlebars template.',
+    '-c  ' + '--conf        '.grey + 'Path to config file. Default is $HOME/.horseshoe.json',
+    '-j  ' + '--json        '.grey + 'Output in JSON format.',
+    '-n  ' + '--no-colors   '.grey + 'Dont do output colouring.',
+    '-h  ' + '--help        '.grey + 'Show this screen you are looking at.',
+    '-v  ' + '--version     '.grey + 'Show horseshoe\'s version number.',
     '',
     'Examples:'.bold,
     '',
     '1. Send plain text email using options:',
     '',
-    'horseshoe ' + '-s "the subject"'.green + ' -t "simple text body"'.yellow +
+    'horseshoe ' + '-s "the subject"'.green + ' -x "simple text body"'.yellow +
       ' someone@somewhere.com'.cyan,
     '',
     '2. Send plain text email piping body into horseshoe:',
@@ -87,8 +93,8 @@ if (options.help || !options.argv.remain.length) {
     '',
     '3. Send email using template passing data as argument:',
     '',
-    'horseshoe ' + '-s "the subject"'.green + ' -t "simple text body"'.yellow +
-      ' someone@somewhere.com'.cyan,
+    'horseshoe ' + '-s "the subject"'.green + ' -t "foo"'.yellow +
+      ' -d \'{"name":"Lupo"}\''.magenta + ' someone@somewhere.com'.cyan,
     ''
   ].join('\n'));
   process.exit(0);
@@ -101,4 +107,88 @@ Object.keys(defaults).forEach(function (k) {
 // Disable colouring if asked to do so...
 if (!options.colors) { colors.mode = 'none'; }
 
-console.log(options);
+// Try to load config file
+try {
+  var config = require(options.conf);
+} catch (err) {
+  console.error(err.message.red);
+  process.exit(1);
+}
+
+var res = new Stream();
+res.readable = true;
+res.on('error', function (err) {
+  console.error('error: '.red + err.message.red);
+});
+res.on('warning', function (buf) {
+  console.error('warning: '.yellow + buf.yellow);
+});
+res.on('data', function (buf) {
+  console.log(buf);
+});
+res.on('end', function (buf) {
+  console.log(buf);
+  console.log('response ended!');
+});
+
+// Handle cases where we don't expect anything from  stdin...
+if (options.text && options.subject) {
+  res.emit('error', 'send simple text email!');
+  process.exit(0);
+} else if (options.html) {
+  console.log('send html email!');
+  process.exit(0);
+} else if (options.tmpl && options.data) {
+  console.log('send template passing data as option.');
+  process.exit(0);
+}
+
+function send(msg) {
+  horseshoe(config.type, config.options).send(msg, function (err, response) {
+    if (err) { return res.emit('error', err); }
+    if (response.failedRecipients.length) {
+      response.failedRecipients.forEach(function (recipient) {
+        res.emit('warning', 'Error sending to ' + JSON.stringify(recipient));
+      });
+    } else {
+      res.emit('end', response.messageId);
+    }
+  });
+}
+
+// Handle input from stdin
+// Input can be either JSON (this implies the --tmpl option) or plain text to be
+// used as the body.
+if (options.tmpl) {
+  var parser = JSONStream.parse(true);
+
+  //console.log('render template with data from stdin!');
+  process.stdin.resume();
+  process.stdin.setEncoding('utf8');
+  process.stdin.pipe(parser);
+
+  parser.on('error', function (err) {
+    console.error(err);
+  });
+
+  parser.on('data', function (chunk) {
+    process.stdout.write('data: ' + chunk);
+  });
+
+  parser.on('end', function () {
+    process.stdout.write('end');
+  });
+} else {
+  var text = '';
+  //console.log('use stdin as message body!');
+  process.stdin.resume();
+  process.stdin.setEncoding('utf8');
+  process.stdin.on('data', function (buf) { text += buf; });
+  process.stdin.on('end', function () {
+    send({
+      subject: options.subject,
+      to: options.argv.remain.join(','),
+      text: text.trim()
+    });
+  });
+}

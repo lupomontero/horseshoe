@@ -17,13 +17,13 @@
     "nodemailer": "~0.3.44",
     "handlebars": "~1.0.10",
     "nopt": "~2.1.1",
-    "colors": "~0.6.0-1"
+    "colors": "~0.6.0-1",
+    "JSONStream": "~0.4.3"
   },
   "devDependencies": {
     "grunt": "~0.4.0",
     "grunt-jslint": "~0.2.5",
-    "grunt-contrib-nodeunit": "~0.1.2",
-    "JSONStream": "~0.4.3"
+    "grunt-contrib-nodeunit": "~0.1.2"
   },
   "scripts": {
     "pretest": "grunt jslint",

@@ -104,6 +104,12 @@ function sendMessage(transport, msg, cb, retries, errors) {
 
   this._render(msg, function (err) {
     if (err) { return cb(err); }
+
+    // Set default sender if exists as transport option.
+    if (!msg.sender && transport.options.sender) {
+      msg.sender = transport.options.sender;
+    }
+
     transport.sendMail(msg, function (err, res) {
       if (err) {
         errors.push(err);

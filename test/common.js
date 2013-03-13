@@ -12,6 +12,8 @@ if (process.env.NODE_ENV === 'no-mocks') {
   global.nodemailer = {
     createTransport: function (type, options) {
       return {
+        transportType: type,
+        options: options,
         close: function () {},
         sendMail: function (msg, cb) {
           if (msg.to === 'bad email') { return cb('error!'); }
