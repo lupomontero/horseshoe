@@ -4,7 +4,6 @@ var
   Stream = require('stream'),
   horseshoe = require('../index');
 
-/*
 exports.sendBadRecipient = function (t) {
   var msg = { to: 'bad email', subject: 'hola', text: 'hello world!' };
 
@@ -183,7 +182,6 @@ exports.pipeIntoStream = function (t) {
   fs.createReadStream(__dirname + '/users.json')
     .pipe(parser).pipe(through).pipe(stream);
 };
-*/
 
 exports.invokeSendSeveralTimesOnSameInstance = function (t) {
   var
