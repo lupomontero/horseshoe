@@ -102,7 +102,7 @@ function sendMessage(transport, msg, cb, retries, errors) {
     return cb(err);
   }
 
-  this._render(msg, function (err) {
+  self._render(msg, function (err) {
     if (err) { return cb(err); }
 
     // Set default sender if exists as transport option.
@@ -174,9 +174,9 @@ module.exports = function (type, options) {
     },
     send: function (msg, cb) {
       var transport = this._createTransport();
-      return sendMessage.call(this, transport,  msg, function (err, res) {
+      return sendMessage.call(this, transport, msg, function (err, res) {
         transport.close(); // Make sure we close de transport pool when done!
-        return cb(err, res);
+        cb(err, res);
       });
     },
     createStream: createStream

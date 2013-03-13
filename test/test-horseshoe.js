@@ -4,6 +4,7 @@ var
   Stream = require('stream'),
   horseshoe = require('../index');
 
+/*
 exports.sendBadRecipient = function (t) {
   var msg = { to: 'bad email', subject: 'hola', text: 'hello world!' };
 
@@ -182,47 +183,21 @@ exports.pipeIntoStream = function (t) {
   fs.createReadStream(__dirname + '/users.json')
     .pipe(parser).pipe(through).pipe(stream);
 };
-
+*/
 
 exports.invokeSendSeveralTimesOnSameInstance = function (t) {
   var
     h = horseshoe('SMTP', global.config.SMTP),
-    msg = {
-      to: 'lupo@e-noise.com',
-      template: 'users-signup',
-      data: { user: { firstname: 'Lupo' } }
-    },
-    msg2 = {
-      to: 'lupo@e-noise.com',
-      template: 'users-signup',
-      data: { user: { firstname: 'Someone' } }
-    },
-    msg3 = {
-      to: 'lupo@e-noise.com',
-      template: 'users-signup',
-      data: { user: { firstname: 'Test' } }
-    },
+    msg1 = { to: 'lupo@e-noise.com', template: 'foo', data: { name: 'Lupo'} },
+    msg2 = { to: 'lupo@e-noise.com', template: 'foo', data: { name: 'Someone' } },
+    msg3 = { to: 'lupo@e-noise.com', template: 'foo', data: { name: 'Test' } },
+    msg4 = { to: 'lupo@e-noise.com', template: 'foo', data: { name: 'Not me' } },
     count = 0;
 
   function done() { if (++count === 4) { t.done(); } }
 
-  h.send(msg, function (err, res) {
-    t.ok(!err);
-    done();
-  });
-  h.send(msg2, function (err, res) {
-    t.ok(!err);
-    done();
-  });
-  h.send(msg3, function (err, res) {
-    t.ok(!err);
-    done();
-  });
-
-  setTimeout(function () {
-    h.send(msg, function (err) {
-      t.ok(!err);
-      done();
-    });
-  }, 100);
+  h.send(msg1, function (err) { t.ok(!err); done(); });
+  h.send(msg2, function (err) { t.ok(!err); done(); });
+  h.send(msg3, function (err) { t.ok(!err); done(); });
+  h.send(msg4, function (err) { t.ok(!err); done(); });
 };
