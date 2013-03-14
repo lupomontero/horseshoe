@@ -277,7 +277,7 @@ if (options.text && options.subject) {
       res.emit('error', new Error('Waiting for stdin but nothing coming in :-S'));
       res.emit('end');
     }
-  }, 1 * 1000);
+  }, 1500);
 
   process.stdin.resume();
   process.stdin.setEncoding('utf8');
