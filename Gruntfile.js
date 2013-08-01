@@ -34,6 +34,6 @@ module.exports = function (grunt) {
   });
 
   // Default task.
-  grunt.registerTask('default', 'jslint nodeunit');
+  grunt.registerTask('default', 'jslint', 'nodeunit');
 
 };
