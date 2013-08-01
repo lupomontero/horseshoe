@@ -1,25 +1,16 @@
 module.exports = function (grunt) {
 
-  grunt.loadNpmTasks('grunt-jslint');
+  grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-nodeunit');
+  grunt.loadNpmTasks('grunt-contrib-watch');
 
   // Project configuration.
   grunt.initConfig({
 
     pkg: grunt.file.readJSON('package.json'),
 
-    jslint: {
-      files: [ 'Gruntfile.js', 'index.js', 'bin/horseshoe', 'test/**/*.js' ],
-      directives: {
-        indent: 2,
-        node: true,
-        sloppy: true,
-        nomen: true,
-        plusplus: true
-      },
-      options: {
-        shebang: true
-      }
+    jshint: {
+      files: [ 'Gruntfile.js', 'index.js', 'bin/horseshoe', 'test/**/*.js' ]
     },
 
     nodeunit: {
@@ -27,13 +18,15 @@ module.exports = function (grunt) {
     },
 
     watch: {
-      files: '<config:lint.files>',
-      tasks: 'default'
+      scripts: {
+        files: [ 'Gruntfile.js', 'index.js', 'test/**/*.js' ],
+        tasks: 'default'
+      }
     }
 
   });
 
   // Default task.
-  grunt.registerTask('default', 'jslint', 'nodeunit');
+  grunt.registerTask('default', [ 'jshint', 'nodeunit' ]);
 
 };
