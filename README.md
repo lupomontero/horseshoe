@@ -52,7 +52,7 @@ In `myscript.js`:
 
 ```javascript
 var
-  mailer = require('horseshoe')('Sendmail', { tmplpath: __dirname + '/mail_templates/' }),
+  mailer = require('horseshoe')('Sendmail', { tmplPath: __dirname + '/mail_templates/' }),
   message = {
     to: 'someone@somewhere.com',
     template: 'users-signup',
