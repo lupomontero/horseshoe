@@ -1,6 +1,4 @@
-# horseshoe
-
-[![Build Status](https://secure.travis-ci.org/lupomontero/horseshoe.png)](http://travis-ci.org/lupomontero/horseshoe)
+# horseshoe [![Build Status](https://secure.travis-ci.org/lupomontero/horseshoe.png)](http://travis-ci.org/lupomontero/horseshoe) [Dependency Status](https://david-dm.org/lupomontero/horseshoe.svg?theme=shields.io)](https://david-dm.org/lupomontero/horseshoe)
 
 `horseshoe` is a mailer module for [node.js](http://nodejs.org/). It provides a
 wrapper around [nodemailer](https://github.com/andris9/nodemailer) used for
