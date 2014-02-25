@@ -1,57 +1,56 @@
 #!/usr/bin/env node
 
-var
-  path = require('path'),
-  Stream = require('stream'),
-  nopt = require("nopt"),
-  colors = require('colors'),
-  JSONStream = require('JSONStream'),
-  horseshoe = require('../index'),
-  argv = process.argv.slice(2),
+var path = require('path');
+var Stream = require('stream');
+var nopt = require("nopt");
+var colors = require('colors');
+var JSONStream = require('JSONStream');
+var horseshoe = require('../index');
+var argv = process.argv.slice(2);
 
-  knownOpts = {
-    subject: String,
-    text: String,
-    html: String,
-    tmpl: String,
-    tmplPath: [ path, false ],
-    data: String,
-    conf: [ path, false ],
-    json: Boolean,
-    colors: Boolean,
-    version: Boolean
-  },
+var knownOpts = {
+  subject: String,
+  text: String,
+  html: String,
+  tmpl: String,
+  tmplPath: [ path, false ],
+  data: String,
+  conf: [ path, false ],
+  json: Boolean,
+  colors: Boolean,
+  version: Boolean
+};
 
-  shorthands = {
-    s: [ '--subject' ],
-    x: [ '--text' ],
-    m: [ '--html' ],
-    t: [ '--tmpl' ],
-    p: [ '--tmplPath' ],
-    d: [ '--data' ],
-    c: [ '--conf' ],
-    j: [ '--json' ],
-    n: [ '--no-colors' ],
-    "?": [ '--help' ],
-    h: [ '--help' ],
-    v: [ '--version' ]
-  },
+var shorthands = {
+  s: [ '--subject' ],
+  x: [ '--text' ],
+  m: [ '--html' ],
+  t: [ '--tmpl' ],
+  p: [ '--tmplPath' ],
+  d: [ '--data' ],
+  c: [ '--conf' ],
+  j: [ '--json' ],
+  n: [ '--no-colors' ],
+  "?": [ '--help' ],
+  h: [ '--help' ],
+  v: [ '--version' ]
+};
 
-  defaults = {
-    subject: null,
-    text: null,
-    html: null,
-    tmpl: null,
-    tmplPath: null,
-    data: null,
-    conf: process.env.HOME + '/.horseshoe.json',
-    json: false,
-    colors: true,
-    help: false,
-    version: false
-  },
+var defaults = {
+  subject: null,
+  text: null,
+  html: null,
+  tmpl: null,
+  tmplPath: null,
+  data: null,
+  conf: process.env.HOME + '/.horseshoe.json',
+  json: false,
+  colors: true,
+  help: false,
+  version: false
+};
 
-  options = nopt(knownOpts, shorthands);
+var options = nopt(knownOpts, shorthands);
 
 Object.keys(defaults).forEach(function (k) {
   if (!options.hasOwnProperty(k)) { options[k] = defaults[k]; }
@@ -86,7 +85,9 @@ function createTextResponse() {
 }
 
 function createJsonResponse() {
-  var s = new Stream(), parser = JSONStream.stringify('[', ',', ']'), code = 0;
+  var s = new Stream();
+  var parser = JSONStream.stringify('[', ',', ']');
+  var  code = 0;
   s.readable = true;
   s.on('error', function (err) { code = 1; parser.write({ error: err.message }); });
   s.on('warn', function (buf) { parser.write({ warn: buf }); });
@@ -205,7 +206,7 @@ if (options.help) {
 function send(msg) {
   horseshoe(config.type, config.options).send(msg, function (err, response) {
     if (err) { return res.emit('error', err); }
-    if (response.failedRecipients.length) {
+    if (response.failedRecipients && response.failedRecipients.length) {
       response.failedRecipients.forEach(function (recipient) {
         res.emit('warn', 'Error sending to ' + JSON.stringify(recipient));
       });

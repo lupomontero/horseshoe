@@ -1,13 +1,12 @@
 // # Horseshoe
-// _TODO: Have to add more comments!_
-var
-  path = require('path'),
-  fs = require('fs'),
-  Stream = require('stream'),
-  Handlebars = require('handlebars'),
-  // If `nodemailer` has been defined globally we use that. This allows us to
-  // easily replace `nodemailer` with a mockup when running tests.
-  nodemailer = global.nodemailer || require('nodemailer');
+
+var path = require('path');
+var fs = require('fs');
+var Stream = require('stream');
+var Handlebars = require('handlebars');
+// If `nodemailer` has been defined globally we use that. This allows us to
+// easily replace `nodemailer` with a mockup when running tests.
+var nodemailer = global.nodemailer || require('nodemailer');
 
 // ## compile
 // Compile a Handlebars template from file. If file doesn't exist or can not be
@@ -28,12 +27,11 @@ function compile(fname, cb) {
 // ## render
 // Render a message object before sending.
 function render(msg, cb) {
-  var
-    self = this,
-    cache = self._tmplCache,
-    htmlPath = path.join(self._tmplPath, msg.template + '.html'),
-    textPath = path.join(self._tmplPath, msg.template + '.txt'),
-    count = 0;
+  var self = this;
+  var cache = self._tmplCache;
+  var htmlPath = path.join(self._tmplPath, msg.template + '.html');
+  var textPath = path.join(self._tmplPath, msg.template + '.txt');
+  var count = 0;
 
   function done() { if (++count === 2) { cb(); } }
 
@@ -89,13 +87,18 @@ function render(msg, cb) {
 // ## sendMessage
 // Send a single email message.
 function sendMessage(transport, msg, cb, retries, errors) {
-  var self = this, err;
+  var self = this;
 
   if (!retries) { retries = 0; }
   if (!errors) { errors = []; }
 
-  if (retries > 2) {
-    err = new Error('Retried 3 times!');
+  // Check if errors so far contain fatal errors. If so we won't retry.
+  var fatalErrors = errors.filter(function (error) {
+    return [ 'AuthError' ].indexOf(error.name) >= 0;
+  });
+
+  if (retries > 2 || fatalErrors.length) {
+    var err = new Error('Failed sending email after ' + retries + ' attempt(s).');
     err.msg = msg;
     err.transport = transport;
     err.attempts = errors;
@@ -124,12 +127,11 @@ function sendMessage(transport, msg, cb, retries, errors) {
 // ## createStream
 // Create a writable stream that will send message objects written to it.
 function createStream() {
-  var
-    self = this,
-    s = new Stream(),
-    transport = self._createTransport(),
-    count = 0,
-    processed = 0;
+  var self = this;
+  var s = new Stream();
+  var transport = self._createTransport();
+  var count = 0;
+  var processed = 0;
 
   s.readable = true;
   s.writable = true;
@@ -182,3 +184,4 @@ module.exports = function (type, options) {
     createStream: createStream
   };
 };
+
