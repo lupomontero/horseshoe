@@ -36,7 +36,7 @@ multiple messages using the streaming interface.
 
 `horseshoe` will retry to send individual emails if they fail (up to 3 times).
 
-**THIS MODULE IS STILL WORK IN PROGRESS**
+* * *
 
 ## Installation
 
@@ -45,6 +45,8 @@ multiple messages using the streaming interface.
 To install globally and have the command line tool placed in your PATH use:
 
     npm install horseshoe -g
+
+* * *
 
 ## Usage
 
@@ -55,13 +57,13 @@ Let's assume that your script is `myscript.js` and you have a directory called
 In `myscript.js`:
 
 ```javascript
-var
-  mailer = require('horseshoe')('Sendmail', { tmplPath: __dirname + '/mail_templates/' }),
-  message = {
-    to: 'someone@somewhere.com',
-    template: 'users-signup',
-    data: { user: { firstname: 'Lupo' } }
-  };
+var horseshoe = require('horseshoe');
+var mailer = horseshoe('Sendmail', { tmplPath: __dirname + '/mail_templates/' });
+var message = {
+  to: 'someone@somewhere.com',
+  template: 'users-signup',
+  data: { user: { firstname: 'Lupo' } }
+};
 
 mailer.send(message, function (error, response) {
   if (error) {
@@ -80,28 +82,29 @@ The `mail_templates/users-signup.txt` template:
 
     Bye!
 
-## Streaming interface
+### Streaming interface
 
 Example:
 
 ```javascript
-var
-  stream = require('horseshoe')('Sendmail').createStream(),
-  messages = [
-    { to: 'someone@somewhere.com', template: 'signup', data: { name: 'Lupo' } },
-    { to: 'someone.else@somewhere.com', template: 'signup', data: { name: 'Someone' } }
-  ];
+var stream = require('horseshoe')('Sendmail').createStream();
+var messages = [
+  { to: 'someone@somewhere.com', template: 'signup', data: { name: 'Lupo' } },
+  { to: 'someone.else@somewhere.com', template: 'signup', data: { name: 'Someone' } }
+];
 
-  stream.on('error', function (error) { /*handle error*/ });
-  stream.on('data', function (response) { /*info about message sent */ });
-  stream.on('end', function () { /*done sending*/ });
+stream.on('error', function (error) { /*handle error*/ });
+stream.on('data', function (response) { /*info about message sent */ });
+stream.on('end', function () { /*done sending*/ });
 
-  messages.forEach(function (message) {
-    stream.write(message);
-  });
+messages.forEach(function (message) {
+  stream.write(message);
+});
 
-  stream.end();
+stream.end();
 ```
+
+* * *
 
 ## Supported transports
 
@@ -159,19 +162,11 @@ var mailer = require('horseshoe')('SMTP', {
 });
 ```
 
-## Command line tool
-
-The command line has its own help file. Just run:
-
-    horseshoe
-
-or
-
-    horseshoe --help
+* * *
 
 ## TODO
 
-* Finish command line interface (and document it)
+* Move cli to its own repo
 * Add support for other template engines?
 * ...
 
