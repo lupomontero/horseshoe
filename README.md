@@ -38,16 +38,6 @@ multiple messages using the streaming interface.
 
 * * *
 
-## Installation
-
-    npm install horseshoe
-
-To install globally and have the command line tool placed in your PATH use:
-
-    npm install horseshoe -g
-
-* * *
-
 ## Usage
 
 Let's assume that your script is `myscript.js` and you have a directory called
