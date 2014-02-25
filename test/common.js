@@ -17,7 +17,7 @@ if (process.env.NODE_ENV === 'no-mocks') {
         close: function () {},
         sendMail: function (msg, cb) {
           if (msg.to === 'bad email') { return cb('error!'); }
-          cb(null, { failedRecipients: [], message: '', messageId: '' });
+          cb(null, { message: '', messageId: '' });
         }
       };
     }
