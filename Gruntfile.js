@@ -10,7 +10,7 @@ module.exports = function (grunt) {
     pkg: grunt.file.readJSON('package.json'),
 
     jshint: {
-      files: [ 'Gruntfile.js', 'index.js', 'bin/horseshoe', 'test/**/*.js' ]
+      files: [ 'Gruntfile.js', 'index.js', 'test/**/*.js' ]
     },
 
     nodeunit: {
