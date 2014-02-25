@@ -4,6 +4,17 @@ var Stream = require('stream');
 var _ = require('lodash');
 var horseshoe = require('../index');
 
+exports['module exports a single function'] = function (t) {
+  t.equal(typeof horseshoe, 'function');
+  t.done();
+};
+
+exports['horseshoe returns a "mailer" object of type Horseshoe'] = function (t) {
+  var mailer = horseshoe();
+  t.equal(mailer.constructor.name, 'Horseshoe');
+  t.done();
+};
+
 // > This test is currently failing when running tests in `no-mocks` environment
 // (that is using real nodemailer and not the mock).
 // TODO: Needs further investigation...
@@ -25,9 +36,8 @@ exports.sendBadTemplate = function (t) {
   var msg = {
     to: 'lupo@enoi.se',
     template: 'bad-template',
-    data: { user: { firstname: 'Lupo' } }
+    data: {}
   };
-
   horseshoe('SMTP', global.config.SMTP).send(msg, function (err, res) {
     t.ok(err);
     t.ok(err instanceof Error);

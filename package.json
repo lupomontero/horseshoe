@@ -27,7 +27,8 @@
     "nopt": "~2.2.0",
     "colors": "~0.6.2",
     "JSONStream": "~0.8.0",
-    "lodash": "^2.4.1"
+    "lodash": "^2.4.1",
+    "async": "^0.2.10"
   },
   "devDependencies": {
     "groc": "~0.6.3",

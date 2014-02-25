@@ -3,6 +3,7 @@
 var path = require('path');
 var fs = require('fs');
 var Stream = require('stream');
+var async = require('async');
 var _ = require('lodash');
 var Handlebars = require('handlebars');
 
@@ -10,6 +11,7 @@ var Handlebars = require('handlebars');
 // easily replace `nodemailer` with a mockup when running tests.
 var nodemailer = global.nodemailer || require('nodemailer');
 
+// Default options.
 var defaults = {
   tmplPath: path.join(process.cwd(), 'mail_templates'),
   tmplCache: {}
@@ -27,7 +29,7 @@ function Horseshoe(type, opt) {
 // ## Horseshoe.send()
 //
 Horseshoe.prototype.send = function (msg, cb) {
-  var transport = nodemailer.createTransport(this.type, this.options);
+  var transport = this._createTransport();
   return this._send(transport, msg, function (err, res) {
     transport.close(); // Make sure we close de transport pool when done!
     cb(err, res);
@@ -56,22 +58,45 @@ Horseshoe.prototype._send = function (transport, msg, cb, retries, errors) {
 
   that.render(msg, function (err) {
     if (err) { return cb(err); }
-
     // Set default sender if exists as transport option.
     if (!msg.sender && transport.options.sender) {
       msg.sender = transport.options.sender;
     }
-
     transport.sendMail(msg, function (err, res) {
       if (err) {
         errors.push(err);
-        return sendMessage.call(that, transport, msg, cb, ++retries, errors);
+        return that._send(transport, msg, cb, ++retries, errors);
       }
       res.messageObject = msg;
       cb(null, res);
     });
   });
 };
+
+var formats = [
+  {
+    name: 'text',
+    ext: 'txt',
+    parse: function (msg, body) {
+      if (typeof body !== 'string') { return; }
+      var textTmplRawArray = body.split('\n');
+      if (!msg.subject) {
+        msg.subject = textTmplRawArray.shift();
+        textTmplRawArray.shift(); // remove empty line after subject line
+      }
+      msg.text = textTmplRawArray.join('\n');
+    }
+  },
+  {
+    name: 'html',
+    parse: function (msg, body) {
+      msg.html = body;
+      if (!msg.subject) {
+        // TODO: msg.subject = // get page title using cheerio...
+      }
+    }
+  }
+];
 
 //
 // ## Horseshoe.render()
@@ -80,60 +105,32 @@ Horseshoe.prototype._send = function (transport, msg, cb, retries, errors) {
 //
 Horseshoe.prototype.render = function (msg, cb) {
   var that = this;
-  var cache = that._tmplCache;
-  var htmlPath = path.join(that._tmplPath, msg.template + '.html');
-  var textPath = path.join(that._tmplPath, msg.template + '.txt');
-  var count = 0;
+  var cache = that.options.tmplCache;
+  var tmplPath = that.options.tmplPath;
+  var template = msg.template;
 
-  function done() { if (++count === 2) { cb(); } }
-
-  if (!msg.template) { return cb(null); }
+  if (!template) { return cb(null); }
   if (!msg.data) { msg.data = {}; }
 
-  // If not in cache we need to compile!
-  if (typeof cache[htmlPath] !== 'function') {
-    that.compile(htmlPath, function (fn) {
-      try {
-        msg.html = fn(msg.data);
-      } catch (exception) {
-        return cb(exception);
-      }
-      cache[htmlPath] = fn;
-      done();
-    });
-  } else {
-    msg.html = cache[htmlPath](msg.data);
-    done();
-  }
-
-  function parseTextBody(body) {
-    var textTmplRawArray;
-
-    if (typeof body !== 'string') { return; }
-
-    textTmplRawArray = body.split('\n');
-    if (!msg.subject) {
-      msg.subject = textTmplRawArray.shift();
-      textTmplRawArray.shift(); // remove empty line after subject line
+  // Render both `html` and `txt` templates. If files are not found...?
+  async.each(formats, function (format, cb) {
+    var key = format.name;
+    var file = path.join(tmplPath, template + '.' + (format.ext || key));
+    // If template is already cached no need to re-compile.
+    if (_.isFunction(cache[file])) {
+      format.parse(msg, cache[file](msg.data));
+      return cb();
     }
-
-    msg.text = textTmplRawArray.join('\n');
-  }
-
-  if (typeof cache[textPath] !== 'function') {
-    that.compile(textPath, function (fn) {
+    that.compile(file, function (fn) {
       try {
-        parseTextBody(fn(msg.data));
+        format.parse(msg, fn(msg.data));
       } catch (exception) {
         return cb(exception);
       }
-      cache[textPath] = fn;
-      done();
+      cache[file] = fn;
+      cb();
     });
-  } else {
-    parseTextBody(cache[textPath](msg.data));
-    done();
-  }
+  }, cb);
 };
 
 //
@@ -173,7 +170,7 @@ Horseshoe.prototype.createStream = function () {
 
   s.write = function (msg) {
     count += 1;
-    sendMessage.call(that, transport, msg, function (err, res) {
+    that._send(transport, msg, function (err, res) {
       if (err) { return s.emit('error', err); }
       s.emit('data', res);
       processed += 1;
@@ -181,9 +178,8 @@ Horseshoe.prototype.createStream = function () {
   };
 
   s.end = function (msg) {
-    var intvl;
     if (arguments.length) { s.write(msg); }
-    intvl = setInterval(function () {
+    var intvl = setInterval(function () {
       if (count === processed) {
         transport.close();
         s.emit('end');
@@ -194,6 +190,10 @@ Horseshoe.prototype.createStream = function () {
   };
 
   return s;
+};
+
+Horseshoe.prototype._createTransport = function () {
+  return nodemailer.createTransport(this.type, this.options);
 };
 
 module.exports = function (type, opt) {
