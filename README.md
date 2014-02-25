@@ -168,3 +168,7 @@ or
 * Finish command line interface (and document it)
 * Add support for other template engines?
 * ...
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/lupomontero/horseshoe/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
