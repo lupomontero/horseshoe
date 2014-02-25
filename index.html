@@ -1,1 +1,165 @@
+<!DOCTYPE html><html lang="en"><head><title>index</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="index"><meta name="groc-project-path" content="index.js"><meta name="groc-github-url" content="https://github.com/lupomontero/horseshoe"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/lupomontero/horseshoe/blob/master/index.js">index.js</a></div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><h1 id="horseshoe">Horseshoe</h1>
 
+<p><em>TODO: Have to add more comments!</em></p></div></div><div class="code"><div class="wrapper"><span class="kd">var</span>
+  <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">),</span>
+  <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">),</span>
+  <span class="nx">Stream</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;stream&#39;</span><span class="p">),</span>
+  <span class="nx">Handlebars</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;handlebars&#39;</span><span class="p">),</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>If <code>nodemailer</code> has been defined globally we use that. This allows us to
+easily replace <code>nodemailer</code> with a mockup when running tests.</p></div></div><div class="code"><div class="wrapper">  <span class="nx">nodemailer</span> <span class="o">=</span> <span class="nx">global</span><span class="p">.</span><span class="nx">nodemailer</span> <span class="o">||</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;nodemailer&#39;</span><span class="p">);</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="compile">compile</h2>
+
+<p>Compile a Handlebars template from file. If file doesn't exist or can not be
+read no error will be raised. The callback will be invoked passing a dummy
+template function that does nothing.
+NOTE: callback will be invoked with only one argument as no errors can be
+raised.</p></div></div><div class="code"><div class="wrapper"><span class="kd">function</span> <span class="nx">compile</span><span class="p">(</span><span class="nx">fname</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">fs</span><span class="p">.</span><span class="nx">exists</span><span class="p">(</span><span class="nx">fname</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">exists</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">exists</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">cb</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{});</span> <span class="p">}</span>
+    <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">fname</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">source</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">cb</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{});</span> <span class="p">}</span>
+      <span class="nx">cb</span><span class="p">(</span><span class="nx">Handlebars</span><span class="p">.</span><span class="nx">compile</span><span class="p">(</span><span class="nx">source</span><span class="p">.</span><span class="nx">toString</span><span class="p">()));</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">}</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="render">render</h2>
+
+<p>Render a message object before sending.</p></div></div><div class="code"><div class="wrapper"><span class="kd">function</span> <span class="nx">render</span><span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span>
+    <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+    <span class="nx">cache</span> <span class="o">=</span> <span class="nx">self</span><span class="p">.</span><span class="nx">_tmplCache</span><span class="p">,</span>
+    <span class="nx">htmlPath</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">_tmplPath</span><span class="p">,</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">template</span> <span class="o">+</span> <span class="s1">&#39;.html&#39;</span><span class="p">),</span>
+    <span class="nx">textPath</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">_tmplPath</span><span class="p">,</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">template</span> <span class="o">+</span> <span class="s1">&#39;.txt&#39;</span><span class="p">),</span>
+    <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+  <span class="kd">function</span> <span class="nx">done</span><span class="p">()</span> <span class="p">{</span> <span class="k">if</span> <span class="p">(</span><span class="o">++</span><span class="nx">count</span> <span class="o">===</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span> <span class="nx">cb</span><span class="p">();</span> <span class="p">}</span> <span class="p">}</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">msg</span><span class="p">.</span><span class="nx">template</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">cb</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span> <span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">msg</span><span class="p">.</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">data</span> <span class="o">=</span> <span class="p">{};</span> <span class="p">}</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>If not in cache we need to compile!</p></div></div><div class="code"><div class="wrapper">  <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">cache</span><span class="p">[</span><span class="nx">htmlPath</span><span class="p">]</span> <span class="o">!==</span> <span class="s1">&#39;function&#39;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">self</span><span class="p">.</span><span class="nx">_compile</span><span class="p">(</span><span class="nx">htmlPath</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">fn</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">try</span> <span class="p">{</span>
+        <span class="nx">msg</span><span class="p">.</span><span class="nx">html</span> <span class="o">=</span> <span class="nx">fn</span><span class="p">(</span><span class="nx">msg</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+      <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">exception</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">cb</span><span class="p">(</span><span class="nx">exception</span><span class="p">);</span>
+      <span class="p">}</span>
+      <span class="nx">cache</span><span class="p">[</span><span class="nx">htmlPath</span><span class="p">]</span> <span class="o">=</span> <span class="nx">fn</span><span class="p">;</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">html</span> <span class="o">=</span> <span class="nx">cache</span><span class="p">[</span><span class="nx">htmlPath</span><span class="p">](</span><span class="nx">msg</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+    <span class="nx">done</span><span class="p">();</span>
+  <span class="p">}</span>
+
+  <span class="kd">function</span> <span class="nx">parseTextBody</span><span class="p">(</span><span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">textTmplRawArray</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">body</span> <span class="o">!==</span> <span class="s1">&#39;string&#39;</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span><span class="p">;</span> <span class="p">}</span>
+
+    <span class="nx">textTmplRawArray</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;\n&#39;</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">msg</span><span class="p">.</span><span class="nx">subject</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">msg</span><span class="p">.</span><span class="nx">subject</span> <span class="o">=</span> <span class="nx">textTmplRawArray</span><span class="p">.</span><span class="nx">shift</span><span class="p">();</span>
+      <span class="nx">textTmplRawArray</span><span class="p">.</span><span class="nx">shift</span><span class="p">();</span> <span class="c1">// remove empty line after subject line</span>
+    <span class="p">}</span>
+
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="nx">textTmplRawArray</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;\n&#39;</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">cache</span><span class="p">[</span><span class="nx">textPath</span><span class="p">]</span> <span class="o">!==</span> <span class="s1">&#39;function&#39;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">self</span><span class="p">.</span><span class="nx">_compile</span><span class="p">(</span><span class="nx">textPath</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">fn</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">try</span> <span class="p">{</span>
+        <span class="nx">parseTextBody</span><span class="p">(</span><span class="nx">fn</span><span class="p">(</span><span class="nx">msg</span><span class="p">.</span><span class="nx">data</span><span class="p">));</span>
+      <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">exception</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">cb</span><span class="p">(</span><span class="nx">exception</span><span class="p">);</span>
+      <span class="p">}</span>
+      <span class="nx">cache</span><span class="p">[</span><span class="nx">textPath</span><span class="p">]</span> <span class="o">=</span> <span class="nx">fn</span><span class="p">;</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nx">parseTextBody</span><span class="p">(</span><span class="nx">cache</span><span class="p">[</span><span class="nx">textPath</span><span class="p">](</span><span class="nx">msg</span><span class="p">.</span><span class="nx">data</span><span class="p">));</span>
+    <span class="nx">done</span><span class="p">();</span>
+  <span class="p">}</span>
+<span class="p">}</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="sendmessage">sendMessage</h2>
+
+<p>Send a single email message.</p></div></div><div class="code"><div class="wrapper"><span class="kd">function</span> <span class="nx">sendMessage</span><span class="p">(</span><span class="nx">transport</span><span class="p">,</span> <span class="nx">msg</span><span class="p">,</span> <span class="nx">cb</span><span class="p">,</span> <span class="nx">retries</span><span class="p">,</span> <span class="nx">errors</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span> <span class="nx">err</span><span class="p">;</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">retries</span><span class="p">)</span> <span class="p">{</span> <span class="nx">retries</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">errors</span><span class="p">)</span> <span class="p">{</span> <span class="nx">errors</span> <span class="o">=</span> <span class="p">[];</span> <span class="p">}</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="nx">retries</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">err</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Retried 3 times!&#39;</span><span class="p">);</span>
+    <span class="nx">err</span><span class="p">.</span><span class="nx">msg</span> <span class="o">=</span> <span class="nx">msg</span><span class="p">;</span>
+    <span class="nx">err</span><span class="p">.</span><span class="nx">transport</span> <span class="o">=</span> <span class="nx">transport</span><span class="p">;</span>
+    <span class="nx">err</span><span class="p">.</span><span class="nx">attempts</span> <span class="o">=</span> <span class="nx">errors</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">cb</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="nx">self</span><span class="p">.</span><span class="nx">_render</span><span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">cb</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">}</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Set default sender if exists as transport option.</p></div></div><div class="code"><div class="wrapper">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">msg</span><span class="p">.</span><span class="nx">sender</span> <span class="o">&amp;&amp;</span> <span class="nx">transport</span><span class="p">.</span><span class="nx">options</span><span class="p">.</span><span class="nx">sender</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">msg</span><span class="p">.</span><span class="nx">sender</span> <span class="o">=</span> <span class="nx">transport</span><span class="p">.</span><span class="nx">options</span><span class="p">.</span><span class="nx">sender</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="nx">transport</span><span class="p">.</span><span class="nx">sendMail</span><span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">errors</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nx">sendMessage</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">self</span><span class="p">,</span> <span class="nx">transport</span><span class="p">,</span> <span class="nx">msg</span><span class="p">,</span> <span class="nx">cb</span><span class="p">,</span> <span class="o">++</span><span class="nx">retries</span><span class="p">,</span> <span class="nx">errors</span><span class="p">);</span>
+      <span class="p">}</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">messageObject</span> <span class="o">=</span> <span class="nx">msg</span><span class="p">;</span>
+      <span class="nx">cb</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">res</span><span class="p">);</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">}</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="createstream">createStream</h2>
+
+<p>Create a writable stream that will send message objects written to it.</p></div></div><div class="code"><div class="wrapper"><span class="kd">function</span> <span class="nx">createStream</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">var</span>
+    <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+    <span class="nx">s</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Stream</span><span class="p">(),</span>
+    <span class="nx">transport</span> <span class="o">=</span> <span class="nx">self</span><span class="p">.</span><span class="nx">_createTransport</span><span class="p">(),</span>
+    <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="nx">processed</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+  <span class="nx">s</span><span class="p">.</span><span class="nx">readable</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+  <span class="nx">s</span><span class="p">.</span><span class="nx">writable</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+  <span class="nx">s</span><span class="p">.</span><span class="nx">destroy</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span> <span class="nx">s</span><span class="p">.</span><span class="nx">writable</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span> <span class="p">};</span>
+
+  <span class="nx">s</span><span class="p">.</span><span class="nx">write</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">msg</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">count</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="nx">sendMessage</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">self</span><span class="p">,</span> <span class="nx">transport</span><span class="p">,</span> <span class="nx">msg</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">s</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="nx">err</span><span class="p">);</span> <span class="p">}</span>
+      <span class="nx">s</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="nx">res</span><span class="p">);</span>
+      <span class="nx">processed</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">});</span>
+  <span class="p">};</span>
+
+  <span class="nx">s</span><span class="p">.</span><span class="nx">end</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">msg</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">intvl</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">arguments</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span> <span class="nx">s</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">msg</span><span class="p">);</span> <span class="p">}</span>
+
+    <span class="nx">intvl</span> <span class="o">=</span> <span class="nx">setInterval</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">count</span> <span class="o">===</span> <span class="nx">processed</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">transport</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
+        <span class="nx">s</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;end&#39;</span><span class="p">);</span>
+        <span class="nx">clearInterval</span><span class="p">(</span><span class="nx">intvl</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">},</span> <span class="mi">25</span><span class="p">);</span>
+    <span class="nx">s</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
+  <span class="p">};</span>
+
+  <span class="k">return</span> <span class="nx">s</span><span class="p">;</span>
+<span class="p">}</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="public-interface">Public interface</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">type</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">{</span>
+    <span class="nx">_tmplPath</span><span class="o">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">tmplPath</span> <span class="o">||</span> <span class="nx">process</span><span class="p">.</span><span class="nx">cwd</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;/mail_templates&#39;</span><span class="p">,</span>
+    <span class="nx">_tmplCache</span><span class="o">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">tmplCache</span> <span class="o">||</span> <span class="p">{},</span>
+    <span class="nx">_compile</span><span class="o">:</span> <span class="nx">compile</span><span class="p">,</span>
+    <span class="nx">_render</span><span class="o">:</span> <span class="nx">render</span><span class="p">,</span>
+    <span class="nx">_createTransport</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">nodemailer</span><span class="p">.</span><span class="nx">createTransport</span><span class="p">(</span><span class="nx">type</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+    <span class="p">},</span>
+    <span class="nx">send</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">transport</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">_createTransport</span><span class="p">();</span>
+      <span class="k">return</span> <span class="nx">sendMessage</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">transport</span><span class="p">,</span> <span class="nx">msg</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">transport</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span> <span class="c1">// Make sure we close de transport pool when done!</span>
+        <span class="nx">cb</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">);</span>
+      <span class="p">});</span>
+    <span class="p">},</span>
+    <span class="nx">createStream</span><span class="o">:</span> <span class="nx">createStream</span>
+  <span class="p">};</span>
+<span class="p">};</span></div></div></div></div></body></html>
