@@ -156,7 +156,6 @@ var mailer = require('horseshoe')('SMTP', {
 
 ## TODO
 
-* Move cli to its own repo
 * Add support for other template engines?
 * ...
 
