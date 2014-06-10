@@ -2,26 +2,34 @@
   "name": "horseshoe",
   "version": "0.0.5",
   "description": "A wrapper around nodemailer used for sending email using handlebars templates.",
-  "keywords": [ "mail", "handlebars", "nodemailer" ],
+  "keywords": [
+    "mail",
+    "handlebars",
+    "nodemailer"
+  ],
   "author": "Lupo Montero <lupomontero@gmail.com> (http://lupomontero.com)",
   "repository": {
     "type": "git",
     "url": "https://github.com/lupomontero/horseshoe"
   },
-  "bugs": { "url": "http://github.com/lupomontero/horseshoe/issues" },
-  "directories": { "test": "./test" },
+  "bugs": {
+    "url": "http://github.com/lupomontero/horseshoe/issues"
+  },
+  "directories": {
+    "test": "./test"
+  },
   "dependencies": {
     "nodemailer": "~0.6.0",
     "handlebars": "~1.3.0",
     "lodash": "^2.4.1",
-    "async": "^0.2.10"
+    "async": "~0.9.0"
   },
   "devDependencies": {
     "groc": "~0.6.3",
     "grunt": "~0.4.1",
-    "grunt-contrib-jshint": "~0.8.0",
-    "grunt-contrib-nodeunit": "~0.3.2",
-    "grunt-contrib-watch": "~0.5.3",
+    "grunt-contrib-jshint": "~0.10.0",
+    "grunt-contrib-nodeunit": "~0.4.0",
+    "grunt-contrib-watch": "~0.6.1",
     "JSONStream": "^0.8.0"
   },
   "scripts": {
