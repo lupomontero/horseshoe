@@ -34,7 +34,7 @@ exports['horseshoe returns a "mailer" object of type Horseshoe'] = function (t) 
 
 exports.sendBadTemplate = function (t) {
   var msg = {
-    to: 'lupo@enoi.se',
+    to: 'lupomontero@gmail.com',
     template: 'bad-template',
     data: {}
   };
@@ -53,7 +53,7 @@ if (process.env.NODE_ENV === 'no-mocks') {
 // bad user
 // bad pass
 exports.incorrectAuthFailure = function (t) {
-  var msg = { to: 'lupo@enoi.se', subject: 'hola', text: 'hello world!' };
+  var msg = { to: 'lupomontero@gmail.com', subject: 'hola', text: 'hello world!' };
   var cfg = _.extend({}, global.config.SMTP);
   cfg.auth = _.extend({}, cfg.auth);
   cfg.auth.pass = 'foo';
@@ -72,7 +72,7 @@ exports.incorrectAuthFailure = function (t) {
 }
 
 exports.sendPlainTextWithoutTemplate = function (t) {
-  var msg = { to: 'lupo@enoi.se', subject: 'hola', text: 'hello world!' };
+  var msg = { to: 'lupomontero@gmail.com', subject: 'hola', text: 'hello world!' };
 
   horseshoe('SMTP', global.config.SMTP).send(msg, function (err, res) {
     t.ok(!err);
@@ -88,7 +88,7 @@ exports.sendPlainTextWithoutTemplate = function (t) {
 
 exports.sendWithPlainTextTemplateOnly = function (t) {
   var msg = {
-    to: 'lupo@enoi.se',
+    to: 'lupomontero@gmail.com',
     template: 'users-signup',
     data: { user: { firstname: 'Lupo' } }
   };
@@ -110,7 +110,7 @@ exports.sendWithPlainTextTemplateOnly = function (t) {
 
 exports.sendWithPlainTextTemplateOnlyDontOverrideSubject = function (t) {
   var msg = {
-    to: 'lupo@enoi.se',
+    to: 'lupomontero@gmail.com',
     template: 'users-signup',
     subject: 'I am the SUBJECT',
     data: { user: { firstname: 'Lupo' } }
@@ -133,7 +133,7 @@ exports.sendWithPlainTextTemplateOnlyDontOverrideSubject = function (t) {
 
 exports.sendWithHtmlTemplateOnly = function (t) {
   var msg = {
-    to: 'lupo@enoi.se',
+    to: 'lupomontero@gmail.com',
     template: 'foo',
     subject: 'I am the SUBJECT',
     data: { name: 'Lupo' }
@@ -172,7 +172,7 @@ exports.sendManyUsingtStream = function (t) {
   });
 
   for (i = 0; i < 5; i++) {
-    msg = { to: 'lupo@enoi.se', subject: 'hmm-' + i, text: 'hallo' };
+    msg = { to: 'lupomontero@gmail.com', subject: 'hmm-' + i, text: 'hallo' };
     stream.write(msg);
   }
 
@@ -217,10 +217,10 @@ exports.pipeIntoStream = function (t) {
 
 exports.invokeSendSeveralTimesOnSameInstance = function (t) {
   var h = horseshoe('SMTP', global.config.SMTP);
-  var msg1 = { to: 'lupo@enoi.se', template: 'foo', data: { name: 'Lupo'} };
-  var msg2 = { to: 'lupo@enoi.se', template: 'foo', data: { name: 'Someone' } };
-  var msg3 = { to: 'lupo@enoi.se', template: 'foo', data: { name: 'Test' } };
-  var msg4 = { to: 'lupo@enoi.se', template: 'foo', data: { name: 'Not me' } };
+  var msg1 = { to: 'lupomontero@gmail.com', template: 'foo', data: { name: 'Lupo'} };
+  var msg2 = { to: 'lupomontero@gmail.com', template: 'foo', data: { name: 'Someone' } };
+  var msg3 = { to: 'lupomontero@gmail.com', template: 'foo', data: { name: 'Test' } };
+  var msg4 = { to: 'lupomontero@gmail.com', template: 'foo', data: { name: 'Not me' } };
   var count = 0;
 
   function done() { if (++count === 4) { t.done(); } }
