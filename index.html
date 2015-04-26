@@ -1,153 +1,115 @@
-<!DOCTYPE html><html lang="en"><head><title>index</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="index"><meta name="groc-project-path" content="index.js"><meta name="groc-github-url" content="https://github.com/lupomontero/horseshoe"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/lupomontero/horseshoe/blob/master/index.js">index.js</a></div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><h1 id="horseshoe">Horseshoe</h1></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="kd">var</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">Stream</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;stream&#39;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">async</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;async&#39;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">_</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">Handlebars</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;handlebars&#39;</span><span class="p">);</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>If <code>nodemailer</code> has been defined globally we use that. This allows us to
-easily replace <code>nodemailer</code> with a mockup when running tests.</p></div></div><div class="code"><div class="wrapper"><span class="kd">var</span> <span class="nx">nodemailer</span> <span class="o">=</span> <span class="nx">global</span><span class="p">.</span><span class="nx">nodemailer</span> <span class="o">||</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;nodemailer&#39;</span><span class="p">);</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Default options.</p></div></div><div class="code"><div class="wrapper"><span class="kd">var</span> <span class="nx">defaults</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">tmplPath</span><span class="o">:</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">cwd</span><span class="p">(),</span> <span class="s1">&#39;mail_templates&#39;</span><span class="p">),</span>
-  <span class="nx">tmplCache</span><span class="o">:</span> <span class="p">{}</span>
-<span class="p">};</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="horseshoe">Horseshoe</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="kd">function</span> <span class="nx">Horseshoe</span><span class="p">(</span><span class="nx">type</span><span class="p">,</span> <span class="nx">opt</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">this</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="nx">type</span><span class="p">;</span>
-  <span class="k">this</span><span class="p">.</span><span class="nx">options</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({},</span> <span class="nx">defaults</span><span class="p">,</span> <span class="nx">opt</span><span class="p">);</span>
-<span class="p">}</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="horseshoesend">Horseshoe.send()</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="nx">Horseshoe</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">send</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">transport</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">_createTransport</span><span class="p">();</span>
-  <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">_send</span><span class="p">(</span><span class="nx">transport</span><span class="p">,</span> <span class="nx">msg</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">transport</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span> <span class="c1">// Make sure we close de transport pool when done!</span>
-    <span class="nx">cb</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">);</span>
-  <span class="p">});</span>
-<span class="p">};</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Send a single email message.</p></div></div><div class="code"><div class="wrapper"><span class="nx">Horseshoe</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">_send</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">transport</span><span class="p">,</span> <span class="nx">msg</span><span class="p">,</span> <span class="nx">cb</span><span class="p">,</span> <span class="nx">retries</span><span class="p">,</span> <span class="nx">errors</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">that</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+<!DOCTYPE html><html lang="en"><head><title>index</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="index"><meta name="groc-project-path" content="index.js"><meta name="groc-github-url" content="https://github.com/lupomontero/horseshoe"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/lupomontero/horseshoe/blob/master/index.js">index.js</a></div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><h1 id="horseshoe">Horseshoe</h1></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-keyword">var</span> path = <span class="hljs-built_in">require</span>(<span class="hljs-string">'path'</span>);
+<span class="hljs-keyword">var</span> fs = <span class="hljs-built_in">require</span>(<span class="hljs-string">'fs'</span>);
+<span class="hljs-keyword">var</span> async = <span class="hljs-built_in">require</span>(<span class="hljs-string">'async'</span>);
+<span class="hljs-keyword">var</span> _ = <span class="hljs-built_in">require</span>(<span class="hljs-string">'lodash'</span>);
+<span class="hljs-keyword">var</span> Handlebars = <span class="hljs-built_in">require</span>(<span class="hljs-string">'handlebars'</span>);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>If <code>nodemailer</code> has been defined globally we use that. This allows us to
+easily replace <code>nodemailer</code> with a mockup when running tests.</p></div></div><div class="code"><div class="wrapper"><span class="hljs-keyword">var</span> nodemailer = global.nodemailer || <span class="hljs-built_in">require</span>(<span class="hljs-string">'nodemailer'</span>);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Default options.</p></div></div><div class="code"><div class="wrapper"><span class="hljs-keyword">var</span> defaults = {
+  tmplPath: path.join(process.cwd(), <span class="hljs-string">'mail_templates'</span>),
+  tmplCache: {}
+};</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="horseshoe">Horseshoe</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Horseshoe</span><span class="hljs-params">(type, opt)</span> </span>{
+  <span class="hljs-keyword">this</span>.type = type;
+  <span class="hljs-keyword">this</span>.options = _.extend({}, defaults, opt);
+}</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="horseshoesend">Horseshoe.send()</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper">Horseshoe.prototype.send = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(msg, cb)</span> </span>{
+  <span class="hljs-keyword">var</span> transport = <span class="hljs-keyword">this</span>._createTransport();
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>._send(transport, msg, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(err, res)</span> </span>{
+    transport.close(); <span class="hljs-comment">// Make sure we close de transport pool when done!</span>
+    cb(err, res);
+  });
+};</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Send a single email message.</p></div></div><div class="code"><div class="wrapper">Horseshoe.prototype._send = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(transport, msg, cb, retries, errors)</span> </span>{
+  <span class="hljs-keyword">var</span> that = <span class="hljs-keyword">this</span>;
 
-  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">retries</span><span class="p">)</span> <span class="p">{</span> <span class="nx">retries</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="p">}</span>
-  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">errors</span><span class="p">)</span> <span class="p">{</span> <span class="nx">errors</span> <span class="o">=</span> <span class="p">[];</span> <span class="p">}</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Check if errors so far contain fatal errors. If so we won't retry.</p></div></div><div class="code"><div class="wrapper">  <span class="kd">var</span> <span class="nx">fatalErrors</span> <span class="o">=</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">[</span> <span class="s1">&#39;AuthError&#39;</span> <span class="p">].</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">name</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">;</span>
-  <span class="p">});</span>
+  <span class="hljs-keyword">if</span> (!retries) { retries = <span class="hljs-number">0</span>; }
+  <span class="hljs-keyword">if</span> (!errors) { errors = []; }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Check if errors so far contain fatal errors. If so we won&#39;t retry.</p></div></div><div class="code"><div class="wrapper">  <span class="hljs-keyword">var</span> fatalErrors = errors.filter(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(error)</span> </span>{
+    <span class="hljs-keyword">return</span> [ <span class="hljs-string">'AuthError'</span> ].indexOf(error.name) &gt;= <span class="hljs-number">0</span>;
+  });
 
-  <span class="k">if</span> <span class="p">(</span><span class="nx">retries</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="o">||</span> <span class="nx">fatalErrors</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">err</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Failed sending email after &#39;</span> <span class="o">+</span> <span class="nx">retries</span> <span class="o">+</span> <span class="s1">&#39; attempt(s).&#39;</span><span class="p">);</span>
-    <span class="nx">err</span><span class="p">.</span><span class="nx">msg</span> <span class="o">=</span> <span class="nx">msg</span><span class="p">;</span>
-    <span class="nx">err</span><span class="p">.</span><span class="nx">transport</span> <span class="o">=</span> <span class="nx">transport</span><span class="p">;</span>
-    <span class="nx">err</span><span class="p">.</span><span class="nx">attempts</span> <span class="o">=</span> <span class="nx">errors</span><span class="p">;</span>
-    <span class="k">return</span> <span class="nx">cb</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-  <span class="p">}</span>
+  <span class="hljs-keyword">if</span> (retries &gt; <span class="hljs-number">2</span> || fatalErrors.length) {
+    <span class="hljs-keyword">var</span> err = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'Failed sending email after '</span> + retries + <span class="hljs-string">' attempt(s).'</span>);
+    err.msg = msg;
+    err.transport = transport;
+    err.attempts = errors;
+    <span class="hljs-keyword">return</span> cb(err);
+  }
 
-  <span class="nx">that</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">cb</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">}</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Set default sender if exists as transport option.</p></div></div><div class="code"><div class="wrapper">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">msg</span><span class="p">.</span><span class="nx">sender</span> <span class="o">&amp;&amp;</span> <span class="nx">transport</span><span class="p">.</span><span class="nx">options</span><span class="p">.</span><span class="nx">sender</span><span class="p">)</span> <span class="p">{</span>
-      <span class="nx">msg</span><span class="p">.</span><span class="nx">sender</span> <span class="o">=</span> <span class="nx">transport</span><span class="p">.</span><span class="nx">options</span><span class="p">.</span><span class="nx">sender</span><span class="p">;</span>
-    <span class="p">}</span>
-    <span class="nx">transport</span><span class="p">.</span><span class="nx">sendMail</span><span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
-      <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nx">errors</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-        <span class="k">return</span> <span class="nx">that</span><span class="p">.</span><span class="nx">_send</span><span class="p">(</span><span class="nx">transport</span><span class="p">,</span> <span class="nx">msg</span><span class="p">,</span> <span class="nx">cb</span><span class="p">,</span> <span class="o">++</span><span class="nx">retries</span><span class="p">,</span> <span class="nx">errors</span><span class="p">);</span>
-      <span class="p">}</span>
-      <span class="nx">res</span><span class="p">.</span><span class="nx">messageObject</span> <span class="o">=</span> <span class="nx">msg</span><span class="p">;</span>
-      <span class="nx">cb</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">res</span><span class="p">);</span>
-    <span class="p">});</span>
-  <span class="p">});</span>
-<span class="p">};</span>
+  that.render(msg, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(err)</span> </span>{
+    <span class="hljs-keyword">if</span> (err) { <span class="hljs-keyword">return</span> cb(err); }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Set default sender if exists as transport option.</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">if</span> (!msg.sender &amp;&amp; transport.options.sender) {
+      msg.sender = transport.options.sender;
+    }
+    transport.sendMail(msg, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(err, res)</span> </span>{
+      <span class="hljs-keyword">if</span> (err) {
+        errors.push(err);
+        <span class="hljs-keyword">return</span> that._send(transport, msg, cb, ++retries, errors);
+      }
+      res.messageObject = msg;
+      cb(<span class="hljs-literal">null</span>, res);
+    });
+  });
+};
 
-<span class="kd">var</span> <span class="nx">formats</span> <span class="o">=</span> <span class="p">[</span>
-  <span class="p">{</span>
-    <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;text&#39;</span><span class="p">,</span>
-    <span class="nx">ext</span><span class="o">:</span> <span class="s1">&#39;txt&#39;</span><span class="p">,</span>
-    <span class="nx">parse</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
-      <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">body</span> <span class="o">!==</span> <span class="s1">&#39;string&#39;</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span><span class="p">;</span> <span class="p">}</span>
-      <span class="kd">var</span> <span class="nx">textTmplRawArray</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;\n&#39;</span><span class="p">);</span>
-      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">msg</span><span class="p">.</span><span class="nx">subject</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nx">msg</span><span class="p">.</span><span class="nx">subject</span> <span class="o">=</span> <span class="nx">textTmplRawArray</span><span class="p">.</span><span class="nx">shift</span><span class="p">();</span>
-        <span class="nx">textTmplRawArray</span><span class="p">.</span><span class="nx">shift</span><span class="p">();</span> <span class="c1">// remove empty line after subject line</span>
-      <span class="p">}</span>
-      <span class="nx">msg</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="nx">textTmplRawArray</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;\n&#39;</span><span class="p">);</span>
-    <span class="p">}</span>
-  <span class="p">},</span>
-  <span class="p">{</span>
-    <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;html&#39;</span><span class="p">,</span>
-    <span class="nx">parse</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
-      <span class="nx">msg</span><span class="p">.</span><span class="nx">html</span> <span class="o">=</span> <span class="nx">body</span><span class="p">;</span>
-      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">msg</span><span class="p">.</span><span class="nx">subject</span><span class="p">)</span> <span class="p">{</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>TODO: msg.subject = // get page title using cheerio...</p></div></div><div class="code"><div class="wrapper">      <span class="p">}</span>
-    <span class="p">}</span>
-  <span class="p">}</span>
-<span class="p">];</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="horseshoerender">Horseshoe.render()</h2>
+<span class="hljs-keyword">var</span> formats = [
+  {
+    name: <span class="hljs-string">'text'</span>,
+    ext: <span class="hljs-string">'txt'</span>,
+    parse: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(msg, body)</span> </span>{
+      <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> body !== <span class="hljs-string">'string'</span>) { <span class="hljs-keyword">return</span>; }
+      <span class="hljs-keyword">var</span> textTmplRawArray = body.split(<span class="hljs-string">'\n'</span>);
+      <span class="hljs-keyword">if</span> (!msg.subject) {
+        msg.subject = textTmplRawArray.shift();
+        textTmplRawArray.shift(); <span class="hljs-comment">// remove empty line after subject line</span>
+      }
+      msg.text = textTmplRawArray.join(<span class="hljs-string">'\n'</span>);
+    }
+  },
+  {
+    name: <span class="hljs-string">'html'</span>,
+    parse: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(msg, body)</span> </span>{
+      msg.html = body;
+      <span class="hljs-keyword">if</span> (!msg.subject) {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>TODO: msg.subject = // get page title using cheerio...</p></div></div><div class="code"><div class="wrapper">      }
+    }
+  }
+];</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="horseshoerender">Horseshoe.render()</h2>
+<p>Render a message object before sending.</p></div></div><div class="code"><div class="wrapper">Horseshoe.prototype.render = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(msg, cb)</span> </span>{
+  <span class="hljs-keyword">var</span> that = <span class="hljs-keyword">this</span>;
+  <span class="hljs-keyword">var</span> cache = that.options.tmplCache;
+  <span class="hljs-keyword">var</span> tmplPath = that.options.tmplPath;
+  <span class="hljs-keyword">var</span> template = msg.template;
 
-<p>Render a message object before sending.</p></div></div><div class="code"><div class="wrapper"><span class="nx">Horseshoe</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">render</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">that</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
-  <span class="kd">var</span> <span class="nx">cache</span> <span class="o">=</span> <span class="nx">that</span><span class="p">.</span><span class="nx">options</span><span class="p">.</span><span class="nx">tmplCache</span><span class="p">;</span>
-  <span class="kd">var</span> <span class="nx">tmplPath</span> <span class="o">=</span> <span class="nx">that</span><span class="p">.</span><span class="nx">options</span><span class="p">.</span><span class="nx">tmplPath</span><span class="p">;</span>
-  <span class="kd">var</span> <span class="nx">template</span> <span class="o">=</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">template</span><span class="p">;</span>
-
-  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">template</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">cb</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span> <span class="p">}</span>
-  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">msg</span><span class="p">.</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">data</span> <span class="o">=</span> <span class="p">{};</span> <span class="p">}</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Render both <code>html</code> and <code>txt</code> templates. If files are not found...?</p></div></div><div class="code"><div class="wrapper">  <span class="nx">async</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">formats</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">format</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">key</span> <span class="o">=</span> <span class="nx">format</span><span class="p">.</span><span class="nx">name</span><span class="p">;</span>
-    <span class="kd">var</span> <span class="nx">file</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">tmplPath</span><span class="p">,</span> <span class="nx">template</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="p">(</span><span class="nx">format</span><span class="p">.</span><span class="nx">ext</span> <span class="o">||</span> <span class="nx">key</span><span class="p">));</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>If template is already cached no need to re-compile.</p></div></div><div class="code"><div class="wrapper">    <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isFunction</span><span class="p">(</span><span class="nx">cache</span><span class="p">[</span><span class="nx">file</span><span class="p">]))</span> <span class="p">{</span>
-      <span class="nx">format</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="nx">cache</span><span class="p">[</span><span class="nx">file</span><span class="p">](</span><span class="nx">msg</span><span class="p">.</span><span class="nx">data</span><span class="p">));</span>
-      <span class="k">return</span> <span class="nx">cb</span><span class="p">();</span>
-    <span class="p">}</span>
-    <span class="nx">that</span><span class="p">.</span><span class="nx">compile</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">fn</span><span class="p">)</span> <span class="p">{</span>
-      <span class="k">try</span> <span class="p">{</span>
-        <span class="nx">format</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="nx">fn</span><span class="p">(</span><span class="nx">msg</span><span class="p">.</span><span class="nx">data</span><span class="p">));</span>
-      <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">exception</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="nx">cb</span><span class="p">(</span><span class="nx">exception</span><span class="p">);</span>
-      <span class="p">}</span>
-      <span class="nx">cache</span><span class="p">[</span><span class="nx">file</span><span class="p">]</span> <span class="o">=</span> <span class="nx">fn</span><span class="p">;</span>
-      <span class="nx">cb</span><span class="p">();</span>
-    <span class="p">});</span>
-  <span class="p">},</span> <span class="nx">cb</span><span class="p">);</span>
-<span class="p">};</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="horseshoecompile">Horseshoe.compile()</h2>
-
-<p>Compile a Handlebars template from file. If file doesn't exist or can not be
+  <span class="hljs-keyword">if</span> (!template) { <span class="hljs-keyword">return</span> cb(<span class="hljs-literal">null</span>); }
+  <span class="hljs-keyword">if</span> (!msg.data) { msg.data = {}; }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Render both <code>html</code> and <code>txt</code> templates. If files are not found...?</p></div></div><div class="code"><div class="wrapper">  async.each(formats, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(format, cb)</span> </span>{
+    <span class="hljs-keyword">var</span> key = format.name;
+    <span class="hljs-keyword">var</span> file = path.join(tmplPath, template + <span class="hljs-string">'.'</span> + (format.ext || key));</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>If template is already cached no need to re-compile.</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">if</span> (_.isFunction(cache[file])) {
+      format.parse(msg, cache[file](msg.data));
+      <span class="hljs-keyword">return</span> cb();
+    }
+    that.compile(file, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(fn)</span> </span>{
+      <span class="hljs-keyword">try</span> {
+        format.parse(msg, fn(msg.data));
+      } <span class="hljs-keyword">catch</span> (exception) {
+        <span class="hljs-keyword">return</span> cb(exception);
+      }
+      cache[file] = fn;
+      cb();
+    });
+  }, cb);
+};</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="horseshoecompile">Horseshoe.compile()</h2>
+<p>Compile a Handlebars template from file. If file doesn&#39;t exist or can not be
 read no error will be raised. The callback will be invoked passing a dummy
 template function that does nothing.
 NOTE: callback will be invoked with only one argument as no errors can be
-raised.</p></div></div><div class="code"><div class="wrapper"><span class="nx">Horseshoe</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">compile</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">fname</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
-  <span class="nx">fs</span><span class="p">.</span><span class="nx">exists</span><span class="p">(</span><span class="nx">fname</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">exists</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">exists</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">cb</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{});</span> <span class="p">}</span>
-    <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">fname</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">source</span><span class="p">)</span> <span class="p">{</span>
-      <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">cb</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{});</span> <span class="p">}</span>
-      <span class="nx">cb</span><span class="p">(</span><span class="nx">Handlebars</span><span class="p">.</span><span class="nx">compile</span><span class="p">(</span><span class="nx">source</span><span class="p">.</span><span class="nx">toString</span><span class="p">()));</span>
-    <span class="p">});</span>
-  <span class="p">});</span>
-<span class="p">};</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="horseshoecreatestream">Horseshoe.createStream()</h2>
+raised.</p></div></div><div class="code"><div class="wrapper">Horseshoe.prototype.compile = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(fname, cb)</span> </span>{
+  fs.exists(fname, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(exists)</span> </span>{
+    <span class="hljs-keyword">if</span> (!exists) { <span class="hljs-keyword">return</span> cb(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{}); }
+    fs.readFile(fname, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(err, source)</span> </span>{
+      <span class="hljs-keyword">if</span> (err) { <span class="hljs-keyword">return</span> cb(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{}); }
+      cb(Handlebars.compile(source.toString()));
+    });
+  });
+};
 
-<p>Create a writable stream that will send message objects written to it.</p></div></div><div class="code"><div class="wrapper"><span class="nx">Horseshoe</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">createStream</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">that</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
-  <span class="kd">var</span> <span class="nx">s</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Stream</span><span class="p">();</span>
-  <span class="kd">var</span> <span class="nx">transport</span> <span class="o">=</span> <span class="nx">that</span><span class="p">.</span><span class="nx">_createTransport</span><span class="p">();</span>
-  <span class="kd">var</span> <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-  <span class="kd">var</span> <span class="nx">processed</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+Horseshoe.prototype._createTransport = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+  <span class="hljs-keyword">return</span> nodemailer.createTransport(<span class="hljs-keyword">this</span>.type, <span class="hljs-keyword">this</span>.options);
+};
 
-  <span class="nx">s</span><span class="p">.</span><span class="nx">readable</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-  <span class="nx">s</span><span class="p">.</span><span class="nx">writable</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-  <span class="nx">s</span><span class="p">.</span><span class="nx">destroy</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span> <span class="nx">s</span><span class="p">.</span><span class="nx">writable</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span> <span class="p">};</span>
-
-  <span class="nx">s</span><span class="p">.</span><span class="nx">write</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">msg</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">count</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
-    <span class="nx">that</span><span class="p">.</span><span class="nx">_send</span><span class="p">(</span><span class="nx">transport</span><span class="p">,</span> <span class="nx">msg</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
-      <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">s</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="nx">err</span><span class="p">);</span> <span class="p">}</span>
-      <span class="nx">s</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="nx">res</span><span class="p">);</span>
-      <span class="nx">processed</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
-    <span class="p">});</span>
-  <span class="p">};</span>
-
-  <span class="nx">s</span><span class="p">.</span><span class="nx">end</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">msg</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nx">arguments</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span> <span class="nx">s</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">msg</span><span class="p">);</span> <span class="p">}</span>
-    <span class="kd">var</span> <span class="nx">intvl</span> <span class="o">=</span> <span class="nx">setInterval</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-      <span class="k">if</span> <span class="p">(</span><span class="nx">count</span> <span class="o">===</span> <span class="nx">processed</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nx">transport</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
-        <span class="nx">s</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;end&#39;</span><span class="p">);</span>
-        <span class="nx">clearInterval</span><span class="p">(</span><span class="nx">intvl</span><span class="p">);</span>
-      <span class="p">}</span>
-    <span class="p">},</span> <span class="mi">25</span><span class="p">);</span>
-    <span class="nx">s</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
-  <span class="p">};</span>
-
-  <span class="k">return</span> <span class="nx">s</span><span class="p">;</span>
-<span class="p">};</span>
-
-<span class="nx">Horseshoe</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">_createTransport</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="nx">nodemailer</span><span class="p">.</span><span class="nx">createTransport</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">type</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">options</span><span class="p">);</span>
-<span class="p">};</span>
-
-<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">type</span><span class="p">,</span> <span class="nx">opt</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="k">new</span> <span class="nx">Horseshoe</span><span class="p">(</span><span class="nx">type</span><span class="p">,</span> <span class="nx">opt</span><span class="p">);</span>
-<span class="p">};</span></div></div></div></div></body></html>
+<span class="hljs-built_in">module</span>.exports = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(type, opt)</span> </span>{
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Horseshoe(type, opt);
+};</div></div></div></div></body></html>
