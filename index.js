@@ -2,7 +2,6 @@
 
 var path = require('path');
 var fs = require('fs');
-var Stream = require('stream');
 var async = require('async');
 var _ = require('lodash');
 var Handlebars = require('handlebars');
@@ -152,46 +151,6 @@ Horseshoe.prototype.compile = function (fname, cb) {
   });
 };
 
-//
-// ## Horseshoe.createStream()
-//
-// Create a writable stream that will send message objects written to it.
-//
-Horseshoe.prototype.createStream = function () {
-  var that = this;
-  var s = new Stream();
-  var transport = that._createTransport();
-  var count = 0;
-  var processed = 0;
-
-  s.readable = true;
-  s.writable = true;
-  s.destroy = function () { s.writable = false; };
-
-  s.write = function (msg) {
-    count += 1;
-    that._send(transport, msg, function (err, res) {
-      if (err) { return s.emit('error', err); }
-      s.emit('data', res);
-      processed += 1;
-    });
-  };
-
-  s.end = function (msg) {
-    if (arguments.length) { s.write(msg); }
-    var intvl = setInterval(function () {
-      if (count === processed) {
-        transport.close();
-        s.emit('end');
-        clearInterval(intvl);
-      }
-    }, 25);
-    s.destroy();
-  };
-
-  return s;
-};
-
 Horseshoe.prototype._createTransport = function () {
   return nodemailer.createTransport(this.type, this.options);
 };
@@ -199,4 +158,3 @@ Horseshoe.prototype._createTransport = function () {
 module.exports = function (type, opt) {
   return new Horseshoe(type, opt);
 };
-

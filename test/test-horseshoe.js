@@ -1,6 +1,5 @@
 require('./common');
 
-var Stream = require('stream');
 var _ = require('lodash');
 var horseshoe = require('../index');
 
@@ -154,67 +153,6 @@ exports.sendWithHtmlTemplateOnly = function (t) {
   });
 };
 
-exports.sendManyUsingtStream = function (t) {
-  var stream = horseshoe('SMTP', global.config.SMTP).createStream();
-  var msg, i;
-
-  stream.on('data', function (buf) {
-    t.equal(typeof buf.message, 'string');
-    t.equal(typeof buf.messageId, 'string');
-    t.equal(buf.messageObject.to, msg.to);
-    t.equal(buf.messageObject.text, msg.text);
-    t.ok(/^hmm-\d$/.test(buf.messageObject.subject));
-  });
-
-  stream.on('end', function () {
-    t.equal(arguments.length, 0);
-    t.done();
-  });
-
-  for (i = 0; i < 5; i++) {
-    msg = { to: 'lupomontero@gmail.com', subject: 'hmm-' + i, text: 'hallo' };
-    stream.write(msg);
-  }
-
-  stream.end();
-};
-
-exports.pipeIntoStream = function (t) {
-  var fs = require('fs');
-  var parser = require('JSONStream').parse([ true ]);
-  var stream = horseshoe('SMTP', global.config.SMTP).createStream();
-  var through = new Stream();
-
-  t.expect(15);
-
-  through.readable = true;
-  through.writable = true;
-  through.destroy = function () { through.writable = false; };
-  through.write = function (buf) {
-    t.ok(buf.email);
-    t.ok(buf.name);
-    through.emit('data', { to: buf.email, template: 'foo', data: buf });
-  };
-  through.end = function (buf) {
-    if (arguments.length) { through.write(buf); }
-    through.destroy();
-    through.emit('end');
-  };
-
-  stream.on('data', function (buf) {
-    t.equal(typeof buf.message, 'string');
-    t.equal(typeof buf.messageId, 'string');
-    t.ok(buf.messageObject);
-  });
-
-  stream.on('end', function () {
-    t.done();
-  });
-
-  fs.createReadStream(__dirname + '/users.json')
-    .pipe(parser).pipe(through).pipe(stream);
-};
-
 exports.invokeSendSeveralTimesOnSameInstance = function (t) {
   var h = horseshoe('SMTP', global.config.SMTP);
   var msg1 = { to: 'lupomontero@gmail.com', template: 'foo', data: { name: 'Lupo'} };
@@ -230,4 +168,3 @@ exports.invokeSendSeveralTimesOnSameInstance = function (t) {
   h.send(msg3, function (err) { t.ok(!err); done(); });
   h.send(msg4, function (err) { t.ok(!err); done(); });
 };
-
