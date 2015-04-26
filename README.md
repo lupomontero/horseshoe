@@ -2,8 +2,8 @@
 
 [![NPM](https://nodei.co/npm/horseshoe.png?compact=true)](https://nodei.co/npm/horseshoe/)
 
-[![Build Status](https://secure.travis-ci.org/lupomontero/horseshoe.png)](http://travis-ci.org/lupomontero/horseshoe) 
-[![Dependency Status](https://david-dm.org/lupomontero/horseshoe.png)](https://david-dm.org/lupomontero/horseshoe) 
+[![Build Status](https://secure.travis-ci.org/lupomontero/horseshoe.png)](http://travis-ci.org/lupomontero/horseshoe)
+[![Dependency Status](https://david-dm.org/lupomontero/horseshoe.png)](https://david-dm.org/lupomontero/horseshoe)
 [![devDependency Status](https://david-dm.org/lupomontero/horseshoe/dev-status.png)](https://david-dm.org/lupomontero/horseshoe#info=devDependencies)
 
 `horseshoe` is a mailer module for [node.js](http://nodejs.org/). It provides a
@@ -17,7 +17,7 @@ using `handlebars` templates and then rendered and sent using this module.
 `horseshoe` renders templates using the `data` specified in the `message`
 object:
 
-```javascript
+```js
 var message = {
   to: 'someone@somewhere.com',
   template: 'users-signup',
@@ -30,9 +30,7 @@ var message = {
 render them using `handlebars` to create the email body.
 
 `horseshoe` exports a single function. You invoke this function to get a
-`mailer` object that you can the use to either send a single message with
-`mailer.send()` or create a writable stream with `mailer.createStream()` to send
-multiple messages using the streaming interface.
+`mailer` object that you can the use to send a  message with `mailer.send()`.
 
 `horseshoe` will retry to send individual emails if they fail (up to 3 times).
 
@@ -46,7 +44,7 @@ Let's assume that your script is `myscript.js` and you have a directory called
 
 In `myscript.js`:
 
-```javascript
+```js
 var horseshoe = require('horseshoe');
 var mailer = horseshoe('Sendmail', { tmplPath: __dirname + '/mail_templates/' });
 var message = {
@@ -64,34 +62,14 @@ mailer.send(message, function (error, response) {
 
 The `mail_templates/users-signup.txt` template:
 
-    This is a test subject
+```hbs
+This is a test subject
 
-    Hey {{user.firstname}},
+Hey {{user.firstname}},
 
-    I hope you like my test email...
+I hope you like my test email...
 
-    Bye!
-
-### Streaming interface
-
-Example:
-
-```javascript
-var stream = require('horseshoe')('Sendmail').createStream();
-var messages = [
-  { to: 'someone@somewhere.com', template: 'signup', data: { name: 'Lupo' } },
-  { to: 'someone.else@somewhere.com', template: 'signup', data: { name: 'Someone' } }
-];
-
-stream.on('error', function (error) { /*handle error*/ });
-stream.on('data', function (response) { /*info about message sent */ });
-stream.on('end', function () { /*done sending*/ });
-
-messages.forEach(function (message) {
-  stream.write(message);
-});
-
-stream.end();
+Bye!
 ```
 
 * * *
@@ -105,7 +83,7 @@ For more info see nodemailer's [README](https://github.com/andris9/nodemailer).
 
 ### Sendmail example
 
-```javascript
+```js
 var mailer = require('horseshoe')('Sendmail', {
   path: "/usr/local/bin/sendmail",
   args: ["-f foo@blurdybloop.com"]
@@ -114,7 +92,7 @@ var mailer = require('horseshoe')('Sendmail', {
 
 ### SMTP
 
-```javascript
+```js
 var mailer = require('horseshoe')('SMTP', {
   sender: 'Someone <someone@somewhere.com>',
   host: 'mail.somewhere.com',
@@ -128,7 +106,7 @@ var mailer = require('horseshoe')('SMTP', {
 
 ### Amazon SES
 
-```javascript
+```js
 var mailer = require('horseshoe')('SES', {
   AWSAccessKeyID: "YOUR-AMAZON-SES-KEY",
   AWSSecretKey: "YOUR-AMAZON-SES-SECRET"
@@ -142,7 +120,7 @@ API key both as username and password.
 
 More info here: http://developer.postmarkapp.com/developer-smtp.html
 
-```javascript
+```js
 var mailer = require('horseshoe')('SMTP', {
   service: 'Postmark',
   auth: {
@@ -151,11 +129,3 @@ var mailer = require('horseshoe')('SMTP', {
   }
 });
 ```
-
-* * *
-
-## TODO
-
-* Add support for other template engines?
-* ...
-
